@@ -1,0 +1,144 @@
+import { z } from "zod";
+
+/* ─── Pantry vision (Gemini) ─── */
+
+export const VisionResultSchema = z.object({
+  items: z.array(
+    z.object({
+      name: z.string().describe("Ingredient name, singular, lowercase, e.g. 'tomato paste'"),
+      quantity_estimate: z
+        .string()
+        .describe("Rough human quantity, e.g. 'half a bag', '3', 'almost empty'"),
+      confidence: z.enum(["high", "medium", "low"]),
+    })
+  ),
+});
+export type VisionResult = z.infer<typeof VisionResultSchema>;
+
+/* ─── Suggestions (Claude) ─── */
+
+export const SuggestionSchema = z.object({
+  title: z.string(),
+  description: z.string().describe("One appetizing sentence about the dish"),
+  time_minutes: z.number(),
+  difficulty: z.enum(["easy", "medium", "challenge"]),
+  match: z.enum(["have-everything", "missing-few"]),
+  missing: z.array(
+    z.object({
+      item: z.string(),
+      substitution: z
+        .string()
+        .nullable()
+        .describe("A workable substitute from the pantry, or null if truly needed"),
+    })
+  ),
+});
+export const SuggestionsSchema = z.object({
+  suggestions: z.array(SuggestionSchema).describe("3 to 5 suggestions"),
+});
+export type Suggestion = z.infer<typeof SuggestionSchema>;
+
+/* ─── Recipe (Claude) ─── */
+
+export const RecipeStepSchema = z.object({
+  n: z.number(),
+  instruction: z.string().describe("The step itself, direct and clear"),
+  detail: z
+    .string()
+    .describe(
+      "Beginner detail: exactly how to do it, what it should look/smell/sound like"
+    ),
+  heat: z
+    .enum(["off", "low", "medium-low", "medium", "medium-high", "high"])
+    .nullable()
+    .describe("Stove/oven heat during this step, null if no heat involved"),
+  duration_min: z
+    .number()
+    .nullable()
+    .describe("Rough minutes this step takes, null if instant"),
+  timer_min: z
+    .number()
+    .nullable()
+    .describe("Set a countdown timer for this many minutes, null if no timer needed"),
+  watch_for: z
+    .string()
+    .nullable()
+    .describe("The doneness cue: what tells you this step is done or going wrong"),
+});
+
+export const RecipeSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  servings: z.number(),
+  time_minutes: z.number(),
+  ingredients: z.array(
+    z.object({
+      item: z.string(),
+      amount: z.string().describe("e.g. '2 tbsp', '1 large', 'a handful'"),
+      prep: z.string().nullable().describe("e.g. 'finely chopped', null if none"),
+    })
+  ),
+  equipment: z.array(z.string()),
+  steps: z.array(RecipeStepSchema),
+});
+export type Recipe = z.infer<typeof RecipeSchema>;
+export type RecipeStep = z.infer<typeof RecipeStepSchema>;
+
+/* ─── Explore dishes (Claude, cached in DB) ─── */
+
+export const ExploreDishSchema = z.object({
+  title: z.string(),
+  description: z.string().describe("One appetizing sentence"),
+  time_minutes: z.number(),
+  difficulty: z.enum(["easy", "medium", "challenge"]),
+  cuisine: z.string().describe("e.g. 'Italian', 'Namibian', 'Asian fusion'"),
+  key_ingredients: z
+    .array(z.string())
+    .describe("The 4-8 essential ingredients, lowercase, singular"),
+});
+export const ExploreDishesSchema = z.object({
+  dishes: z.array(ExploreDishSchema).describe("6 to 10 dishes"),
+});
+export type ExploreDish = z.infer<typeof ExploreDishSchema>;
+
+/* ─── Cook session ─── */
+
+export type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+export type CookSession = {
+  id: string;
+  recipe: Recipe;
+  messages: ChatMessage[];
+  current_step: number;
+  status: "active" | "completed" | "abandoned";
+  started_at: string;
+  completed_at: string | null;
+};
+
+/* ─── Pantry / equipment rows ─── */
+
+export type PantryItem = {
+  id: string;
+  name: string;
+  quantity_text: string | null;
+  source: "photo" | "manual";
+  updated_at: string;
+};
+
+export const EQUIPMENT_OPTIONS = [
+  "stove",
+  "oven",
+  "airfryer",
+  "microwave",
+  "kettle",
+  "blender",
+  "toaster",
+  "grill/braai",
+  "slow cooker",
+  "rice cooker",
+  "hand mixer",
+  "pots & pans",
+] as const;
