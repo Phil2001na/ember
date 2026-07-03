@@ -1,5 +1,20 @@
 # Ember — update log
 
+## 2026-07-04
+
+### Verified end-to-end + deployed
+- Full browser verification with a test user (ember-test@ember.local.test): onboarding →
+  pantry CRUD → suggestions → recipe generation → cook session with a mid-cook pivot that
+  triggered `amend_recipe` (steps rewritten in UI **and** DB) → finish flow → explore
+  generation (8 dishes incl. kapana) → vision endpoint (real food photo → 11+ ingredients).
+- **Anthropic key has NO credit balance** — brain temporarily switched to Gemini via
+  `BRAIN=gemini` env override (`lib/ai.ts`); remove the env var after topping up credits
+  to run on Claude Sonnet 5. Array min/max removed from zod schemas (Gemini structured
+  outputs reject them; counts moved into prompts).
+- Deployed to Vercel: https://ember-philipkantewa-4892s-projects.vercel.app (project
+  `ember`); env vars pushed; Vercel Authentication (deployment protection) disabled so the
+  app is public. GROQ_API_KEY still missing — voice returns 503 until added.
+
 ## 2026-07-03
 
 ### Full v1 feature build
