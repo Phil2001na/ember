@@ -2,6 +2,11 @@
 
 ## 2026-07-05
 
+### Pushed to GitHub + connected Vercel
+- Created private GitHub repo `Phil2001na/ember` from the existing local git history and
+  pushed master; connected the existing Vercel project (`ember`) to it via `vercel git connect`
+  so future pushes to master auto-deploy.
+
 ### Brain model bump on Gemini stopgap
 - Upgraded `brain` (suggestions/recipes/cook coaching) from `gemini-2.5-flash` to
   `gemini-2.5-pro` when `BRAIN=gemini`, to try better reasoning/instruction-following on
