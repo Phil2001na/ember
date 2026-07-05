@@ -1,5 +1,13 @@
 # Ember — update log
 
+## 2026-07-05
+
+### Brain model bump on Gemini stopgap
+- Upgraded `brain` (suggestions/recipes/cook coaching) from `gemini-2.5-flash` to
+  `gemini-2.5-pro` when `BRAIN=gemini`, to try better reasoning/instruction-following on
+  structured recipe gen + `amend_recipe` tool calls while Anthropic credits are still empty.
+  `eyes` (pantry vision) left on `gemini-2.5-flash`. Redeployed to Vercel production.
+
 ## 2026-07-04
 
 ### Verified end-to-end + deployed

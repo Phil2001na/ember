@@ -9,7 +9,7 @@ const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
 // Anthropic credits run dry (same trick as the Keeper).
 export const brain =
   process.env.BRAIN === "gemini"
-    ? google("gemini-2.5-flash")
+    ? google("gemini-2.5-pro")
     : anthropic("claude-sonnet-5");
 
 // Gemini = eyes (pantry photo → ingredients)
