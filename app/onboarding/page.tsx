@@ -37,7 +37,7 @@ export default function OnboardingPage() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return router.push("/login");
+    if (!user) return;
 
     const { error: profileErr } = await supabase.from("profiles").upsert({
       user_id: user.id,

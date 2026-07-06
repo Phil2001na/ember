@@ -1,8 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth"];
-
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -27,24 +25,16 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Refresh the session (required for SSR) and gate private pages.
+  // Refresh the session (required for SSR).
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const path = request.nextUrl.pathname;
-  const isPublic = PUBLIC_PATHS.some((p) => path.startsWith(p));
-
-  if (!user && !isPublic) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
-
-  if (user && path === "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    return NextResponse.redirect(url);
+  // No login screen for now — silently sign in anonymously so there's
+  // always a user_id for RLS-scoped data.
+  if (!user) {
+    const { error } = await supabase.auth.signInAnonymously();
+    if (error) console.error("[proxy] signInAnonymously failed:", error.message);
   }
 
   return response;

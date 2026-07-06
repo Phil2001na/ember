@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import TabBar from "@/components/TabBar";
-import SignOutButton from "./SignOutButton";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -34,8 +33,6 @@ export default async function ProfilePage() {
             dishes cooked with Ember
           </p>
         </div>
-
-        <SignOutButton />
       </main>
       <TabBar />
     </>

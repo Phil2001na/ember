@@ -1,5 +1,20 @@
 # Ember — update log
 
+## 2026-07-06 11:57
+
+### Removed email login, auto sign-in anonymously
+- Ripped out the OTP email/code login screen (`app/login`) and the sign-out button — for now
+  it's just Philip using the app, so no login step should be needed at all.
+- `proxy.ts` now silently calls `supabase.auth.signInAnonymously()` when there's no session,
+  instead of redirecting to `/login`. Enabled "Allow anonymous sign-ins" in the shared Supabase
+  project's Auth settings (was disabled by default) to make this work.
+- Anonymous users get the `authenticated` role and a real `user_id`, so existing RLS/onboarding
+  flow works unchanged — a fresh anon session just lands on `/onboarding` like any new user.
+- Note: session lives in a cookie, so clearing cookies/switching browsers starts a new identity
+  (no data recovery). Fine for personal use now; revisit if this needs to be multi-device or
+  multi-user later. Also worth adding captcha on anonymous sign-in eventually since the app is
+  publicly live with no deployment protection (Supabase's own recommendation).
+
 ## 2026-07-05
 
 ### Pushed to GitHub + connected Vercel
