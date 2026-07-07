@@ -10,8 +10,17 @@ export async function POST(request: Request) {
   const kitchen = await loadKitchen();
   if (!kitchen) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const { title, notes } = await request.json();
+  const { title, notes, mode } = await request.json();
   if (!title) return NextResponse.json({ error: "no title" }, { status: 400 });
+
+  const ingredientRule =
+    mode === "authentic"
+      ? `- This is the proper, standard version of the dish. Use the real, correct
+  ingredients — assume the cook will buy anything they don't already have rather
+  than substituting it away.`
+      : `- Use ONLY ingredients from their pantry (plus water, and salt/pepper if plausible).
+  If something essential is missing, build in the substitution rather than listing
+  the missing item.`;
 
   const { object } = await generateObject({
     model: brain,
@@ -23,9 +32,7 @@ ${kitchenPrompt(kitchen)}
 Write the complete recipe for: "${title}"${notes ? `\nContext: ${notes}` : ""}
 
 Rules:
-- Use ONLY ingredients from their pantry (plus water, and salt/pepper if plausible).
-  If something essential is missing, build in the substitution rather than listing
-  the missing item.
+${ingredientRule}
 - Use ONLY their equipment.
 - Steps must be in exact order a real cook would do them, including prep steps.
 - Every step gets a "detail" written for their skill level: exactly HOW to do it,

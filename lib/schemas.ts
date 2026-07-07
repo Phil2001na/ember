@@ -38,6 +38,38 @@ export const SuggestionsSchema = z.object({
 });
 export type Suggestion = z.infer<typeof SuggestionSchema>;
 
+/* ─── Dish check (Claude) — "I want to cook X" ─── */
+
+export const DishCheckSchema = z.object({
+  title: z.string().describe("The normalized, confirmed name of the dish"),
+  description: z.string().describe("One appetizing sentence about the dish"),
+  time_minutes: z.number(),
+  difficulty: z.enum(["easy", "medium", "challenge"]),
+  ingredients: z.array(
+    z.object({
+      item: z.string(),
+      amount: z.string().describe("e.g. '2 tbsp', '1 large', 'a handful'"),
+      have: z.boolean().describe("true if this exact item is already in their pantry"),
+      substitution: z
+        .string()
+        .nullable()
+        .describe("A workable pantry substitute if they don't have this item, else null"),
+    })
+  ),
+  can_improvise: z
+    .boolean()
+    .describe(
+      "true if a genuinely workable version of this dish can be made using ONLY their pantry plus substitutions"
+    ),
+  improvise_note: z
+    .string()
+    .nullable()
+    .describe(
+      "If can_improvise is false, briefly explain what's missing and why no substitution saves it. Null if can_improvise is true."
+    ),
+});
+export type DishCheck = z.infer<typeof DishCheckSchema>;
+
 /* ─── Recipe (Claude) ─── */
 
 export const RecipeStepSchema = z.object({

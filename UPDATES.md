@@ -1,5 +1,25 @@
 # Ember — update log
 
+## 2026-07-07
+
+### "I want to cook X" flow
+- New `/api/dish-check` route: given a free-typed dish name, Gemini works out the
+  real ingredient list and checks each item against the pantry (`have` true/false
+  + an optional pantry substitution), and decides `can_improvise` (false if a
+  defining ingredient has no workable substitute).
+- `/suggest` page now has an input above the pantry-based suggestions: "Know
+  exactly what you want?" → shows the ingredient checklist (✓ have it / need it)
+  → "Let me get the rest" (writes the authentic recipe, real ingredients, no
+  forced substitutions) or "Improvise with what I have" (pantry-only, disabled
+  with an explanation when `can_improvise` is false).
+- `/api/recipe` gained a `mode` param: `"authentic"` uses real ingredients
+  (default `improvise` behavior unchanged, so the existing pantry-suggestion flow
+  isn't affected).
+- Verified end-to-end in-browser: typed "chicken curry" with a rice/onion/garlic/
+  olive oil/salt pantry → correctly flagged chicken, ginger, curry powder, coconut
+  milk as missing with no substitutes, disabled improvise with a clear reason, and
+  "Let me get the rest" produced a proper chicken curry recipe.
+
 ## 2026-07-06 11:57
 
 ### Removed email login, auto sign-in anonymously
