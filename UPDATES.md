@@ -1,5 +1,34 @@
 # Ember — update log
 
+## 2026-07-07 (4) 22:30
+
+### Self-maintaining pantry (conversational)
+- The pantry now keeps itself through the chat instead of manual bookkeeping:
+  - New `update_pantry` tool in `/api/kitchen-chat` — "I bought eggs, mince and
+    peppers" or "used the last of my eggs" upserts/deletes `ember.pantry_items`
+    mid-conversation; a small `🧺 + egg, beef mince · − cream` badge renders in
+    the chat where it happened.
+  - Chat prompt now defaults to EXACTLY 2 dish suggestions: the best fit plus a
+    noticeably quicker fallback ("one if that'll take too long"); 1 if an exact
+    dish was named.
+  - New `components/PantrySheet.tsx`: attachment-style 🧺 button beside the chat
+    input (like ChatGPT's paperclip) opens a bottom sheet of the live pantry —
+    tap a chip to remove what you don't actually have, quick-add input, link to
+    the full /pantry page for camera scan.
+  - Post-cook pantry check: new `/api/used-up` route — on "Done — I cooked it",
+    the brain reads the recipe + the cook-chat (substitutions count) + pantry
+    quantities and proposes which items got finished off; the finish screen
+    shows them as pre-selected chips → tap any you still have → one-tap
+    "Update pantry" (or Skip). Staples (salt/oil/rice) never get proposed.
+- Verified end-to-end in-browser with a fresh anon user: chat add ("bought eggs,
+  beef mince, peppers, onion, cream" → 🧺 badge + exactly 2 suggestions, one
+  quick with everything on hand) → 🧺 sheet (tap-removed pepper, quick-added
+  rice; recipe gen picked both changes up) → cooked the frittata through all 8
+  steps, told the cook chat "cream had gone off, binned it, used milk" →
+  finish screen proposed beef mince, onion, cream (cream from the chat, not the
+  recipe!) → deselected onion → Update pantry → /pantry correctly shows only
+  rice, egg, onion → chat "used the last of my eggs" → 🧺 − egg removal.
+
 ## 2026-07-07 (3)
 
 ### Saved recipes

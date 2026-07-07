@@ -38,6 +38,26 @@ export const SuggestionsSchema = z.object({
 });
 export type Suggestion = z.infer<typeof SuggestionSchema>;
 
+/* ─── Pantry update (kitchen-chat tool) ─── */
+
+export const PantryUpdateSchema = z.object({
+  add: z
+    .array(z.string())
+    .describe("Ingredient names to add to the pantry, lowercase, singular, e.g. 'egg'"),
+  remove: z
+    .array(z.string())
+    .describe("EXACT pantry item names to remove because they're finished or gone off"),
+});
+export type PantryUpdate = z.infer<typeof PantryUpdateSchema>;
+
+/* ─── Used-up check (after a cook) ─── */
+
+export const UsedUpSchema = z.object({
+  used_up: z
+    .array(z.string())
+    .describe("EXACT pantry item names that were likely finished off by this cook"),
+});
+
 /* ─── Dish check (Claude) — "I want to cook X" ─── */
 
 export const DishCheckSchema = z.object({

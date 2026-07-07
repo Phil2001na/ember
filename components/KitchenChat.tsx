@@ -9,12 +9,24 @@ import { createClient } from "@/lib/supabase/client";
 import type { Recipe, Suggestion } from "@/lib/schemas";
 import RecipePreview from "@/components/RecipePreview";
 import SuggestionCarousel from "@/components/SuggestionCarousel";
+import PantrySheet from "@/components/PantrySheet";
 
 function messageText(m: UIMessage): string {
   return m.parts
     .filter((p): p is Extract<typeof p, { type: "text" }> => p.type === "text")
     .map((p) => p.text)
     .join("");
+}
+
+function messagePantryUpdates(m: UIMessage): { added: string[]; removed: string[] }[] {
+  const updates: { added: string[]; removed: string[] }[] = [];
+  for (const part of m.parts) {
+    if (part.type === "tool-update_pantry" && part.state === "output-available" && part.output) {
+      const { added, removed } = part.output as { added: string[]; removed: string[] };
+      if (added?.length || removed?.length) updates.push({ added: added ?? [], removed: removed ?? [] });
+    }
+  }
+  return updates;
 }
 
 function messageSuggestions(m: UIMessage): Suggestion[][] {
@@ -49,6 +61,7 @@ export default function KitchenChat({
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [starting, setStarting] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
+  const [pantryOpen, setPantryOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status } = useChat({
@@ -179,8 +192,20 @@ export default function KitchenChat({
         {messages.map((m) => {
           const text = messageText(m);
           const suggestionGroups = messageSuggestions(m);
+          const pantryUpdates = messagePantryUpdates(m);
           return (
             <div key={m.id} style={{ display: "grid", gap: 10, justifyItems: m.role === "user" ? "end" : "start" }}>
+              {pantryUpdates.map((u, i) => (
+                <span key={`pu-${i}`} className="badge badge-accent" style={{ justifySelf: "start" }}>
+                  🧺{" "}
+                  {[
+                    u.added.length ? `+ ${u.added.join(", ")}` : null,
+                    u.removed.length ? `− ${u.removed.join(", ")}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join("  ·  ")}
+                </span>
+              ))}
               {text && (
                 <div
                   style={{
@@ -214,6 +239,15 @@ export default function KitchenChat({
       </div>
 
       <form onSubmit={submit} style={{ display: "flex", gap: 8, padding: "10px 18px" }}>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          style={{ minWidth: 48, padding: "12px 0", fontSize: "1.1rem" }}
+          onClick={() => setPantryOpen(true)}
+          aria-label="Open pantry"
+        >
+          🧺
+        </button>
         <input
           className="input"
           placeholder="e.g. I've got chicken and rice, no idea what to do…"
@@ -224,6 +258,8 @@ export default function KitchenChat({
           ↑
         </button>
       </form>
+
+      <PantrySheet open={pantryOpen} onClose={() => setPantryOpen(false)} />
     </div>
   );
 }

@@ -42,6 +42,11 @@ export default function CookClient({
   const [speakReplies, setSpeakReplies] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  // post-cook pantry check: null = not checked, [] = nothing to remove
+  const [usedUp, setUsedUp] = useState<string[] | null>(null);
+  const [usedUpChecking, setUsedUpChecking] = useState(false);
+  const [deselected, setDeselected] = useState<Set<string>>(new Set());
+  const [pantryUpdated, setPantryUpdated] = useState(false);
   const speakRepliesRef = useRef(speakReplies);
   speakRepliesRef.current = speakReplies;
   const spokenIds = useRef<Set<string>>(new Set(initialMessages.map((m) => m.id)));
@@ -141,10 +146,44 @@ export default function CookClient({
 
   async function finish() {
     setDone(true);
-    await supabase
+    setUsedUpChecking(true);
+    supabase
       .from("cook_sessions")
       .update({ status: "completed", completed_at: new Date().toISOString() })
-      .eq("id", sessionId);
+      .eq("id", sessionId)
+      .then(() => {});
+    try {
+      const res = await fetch("/api/used-up", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      });
+      if (res.ok) {
+        const { used_up } = await res.json();
+        setUsedUp(used_up ?? []);
+      } else {
+        setUsedUp([]);
+      }
+    } catch {
+      setUsedUp([]);
+    } finally {
+      setUsedUpChecking(false);
+    }
+  }
+
+  async function updatePantry() {
+    if (!usedUp) return;
+    const names = usedUp.filter((n) => !deselected.has(n));
+    setPantryUpdated(true);
+    if (!names.length) return;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    await supabase
+      .from("pantry_items")
+      .delete()
+      .eq("user_id", user!.id)
+      .in("name", names);
   }
 
   async function saveRecipe() {
@@ -167,6 +206,57 @@ export default function CookClient({
         <p style={{ color: "var(--text-dim)", marginBottom: 28 }}>
           {recipe.title} — cooked by you, coached by Ember.
         </p>
+
+        {usedUpChecking && (
+          <p style={{ color: "var(--text-faint)", fontSize: "0.85rem", marginBottom: 20, display: "flex", gap: 8, justifyContent: "center", alignItems: "center" }}>
+            <span className="spinner" style={{ width: 14, height: 14 }} /> checking your pantry…
+          </p>
+        )}
+
+        {!pantryUpdated && usedUp && usedUp.length > 0 && (
+          <div className="card fade-in" style={{ textAlign: "left", marginBottom: 20, borderColor: "var(--ember-500)" }}>
+            <h3 style={{ fontSize: "0.95rem", marginBottom: 4 }}>🧺 Pantry check</h3>
+            <p style={{ color: "var(--text-dim)", fontSize: "0.82rem", marginBottom: 12 }}>
+              Looks like this cook finished these off — tap any you still have.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+              {usedUp.map((name) => {
+                const off = deselected.has(name);
+                return (
+                  <button
+                    key={name}
+                    className={`chip ${off ? "" : "selected"}`}
+                    style={off ? { opacity: 0.4, textDecoration: "line-through" } : undefined}
+                    onClick={() =>
+                      setDeselected((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(name)) next.delete(name);
+                        else next.add(name);
+                        return next;
+                      })
+                    }
+                  >
+                    {name}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={updatePantry}>
+                Update pantry
+              </button>
+              <button className="btn btn-ghost" onClick={() => setPantryUpdated(true)}>
+                Skip
+              </button>
+            </div>
+          </div>
+        )}
+        {pantryUpdated && usedUp && usedUp.length > 0 && (
+          <p style={{ color: "var(--text-faint)", fontSize: "0.85rem", marginBottom: 20 }}>
+            ✓ Pantry sorted.
+          </p>
+        )}
+
         <button
           className="btn btn-ghost btn-full"
           style={{ marginBottom: 12 }}
