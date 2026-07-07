@@ -40,6 +40,8 @@ export default function CookClient({
   const [done, setDone] = useState(initialStatus === "completed");
   const [chatOpen, setChatOpen] = useState(false);
   const [speakReplies, setSpeakReplies] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const speakRepliesRef = useRef(speakReplies);
   speakRepliesRef.current = speakReplies;
   const spokenIds = useRef<Set<string>>(new Set(initialMessages.map((m) => m.id)));
@@ -145,6 +147,18 @@ export default function CookClient({
       .eq("id", sessionId);
   }
 
+  async function saveRecipe() {
+    setSaving(true);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from("saved_recipes")
+      .insert({ user_id: user!.id, recipe });
+    setSaving(false);
+    if (!error) setSaved(true);
+  }
+
   if (done) {
     return (
       <main className="page fade-in" style={{ display: "flex", flexDirection: "column", justifyContent: "center", textAlign: "center", minHeight: "100dvh", paddingBottom: 40 }}>
@@ -153,6 +167,14 @@ export default function CookClient({
         <p style={{ color: "var(--text-dim)", marginBottom: 28 }}>
           {recipe.title} — cooked by you, coached by Ember.
         </p>
+        <button
+          className="btn btn-ghost btn-full"
+          style={{ marginBottom: 12 }}
+          onClick={saveRecipe}
+          disabled={saving || saved}
+        >
+          {saved ? "✓ Saved to your recipes" : saving ? <span className="spinner" /> : "📖 Save this recipe"}
+        </button>
         <button className="btn btn-primary btn-full" onClick={() => router.push("/")}>
           Back home
         </button>

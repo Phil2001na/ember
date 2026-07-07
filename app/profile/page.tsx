@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import TabBar from "@/components/TabBar";
 
@@ -13,11 +14,17 @@ export default async function ProfilePage() {
     .eq("user_id", user!.id)
     .maybeSingle();
 
-  const { count: cooked } = await supabase
-    .from("cook_sessions")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user!.id)
-    .eq("status", "completed");
+  const [{ count: cooked }, { count: savedCount }] = await Promise.all([
+    supabase
+      .from("cook_sessions")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user!.id)
+      .eq("status", "completed"),
+    supabase
+      .from("saved_recipes")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user!.id),
+  ]);
 
   return (
     <>
@@ -33,6 +40,15 @@ export default async function ProfilePage() {
             dishes cooked with Ember
           </p>
         </div>
+
+        <Link
+          href="/saved"
+          className="card"
+          style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+        >
+          <span>📖 Saved recipes</span>
+          <span style={{ color: "var(--text-faint)" }}>{savedCount ?? 0} →</span>
+        </Link>
       </main>
       <TabBar />
     </>

@@ -150,6 +150,14 @@ export type CookSession = {
   completed_at: string | null;
 };
 
+/* ─── Saved recipes ─── */
+
+export type SavedRecipe = {
+  id: string;
+  recipe: Recipe;
+  saved_at: string;
+};
+
 /* ─── Pantry / equipment rows ─── */
 
 export type PantryItem = {

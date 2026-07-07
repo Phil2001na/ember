@@ -1,5 +1,27 @@
 # Ember — update log
 
+## 2026-07-07 (3)
+
+### Saved recipes
+- New `ember.saved_recipes` table (migration `002_saved_recipes.sql`, applied to the
+  live shared Supabase project): `user_id`, `recipe` jsonb, `saved_at`, RLS scoped
+  to the owning user like every other Ember table.
+- The cook-session "You made it" finish screen (`CookClient.tsx`) now has a
+  "📖 Save this recipe" button next to "Back home" — inserts the finished recipe,
+  then flips to a disabled "✓ Saved to your recipes" state.
+- New `/saved` page + `SavedClient.tsx`: lists saved recipes (title, description,
+  time/servings/steps), tap one to open the existing `RecipePreview` — "Start
+  cooking" creates a fresh `cook_sessions` row and jumps into `/cook/[id]`, same
+  flow as Explore/Suggest/the chat. Each row has a ✕ to remove it.
+- Linked from Profile ("You" tab): a "📖 Saved recipes" card showing the count,
+  linking to `/saved`. Not added as a 5th bottom tab to avoid crowding the nav.
+- Verified end-to-end in-browser: typechecks clean; chatted "I want to cook a
+  simple tomato pasta" → carousel appeared (confirms the chat's suggest_dishes
+  round-trip, unverified last session, does work) → picked a dish → cooked
+  through all 8 steps → "Done — I cooked it" → saved → confirmed it shows on
+  `/saved`, opens via `RecipePreview`, and the ✕ delete removes it → confirmed
+  the Profile card's count updates and links correctly.
+
 ## 2026-07-07 (2)
 
 ### "Cook" tab is now a chat
