@@ -228,6 +228,21 @@ input, textarea, select { font: inherit; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+.hscroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.hscroll::-webkit-scrollbar { display: none; }
+.hscroll-item {
+  flex: 0 0 82%;
+  scroll-snap-align: center;
+}
+
 .fade-in { animation: fadeIn 0.25s ease-out; }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }

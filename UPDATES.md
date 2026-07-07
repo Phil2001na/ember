@@ -1,5 +1,30 @@
 # Ember — update log
 
+## 2026-07-07 (2)
+
+### "Cook" tab is now a chat
+- Home page (`/`, the "Cook" tab) is replaced with a ChatGPT-style conversation
+  (`components/KitchenChat.tsx`) instead of the old greeting + two buttons. Type
+  what you want to cook, or what you've got lying around, in plain language.
+- New `/api/kitchen-chat` route: `streamText` + a `suggest_dishes` tool (reuses
+  the existing `SuggestionsSchema`) that the model calls whenever it has enough
+  to propose 1-5 concrete dishes, checked against the pantry.
+- New `components/SuggestionCarousel.tsx`: renders those dishes as a horizontally
+  swipeable row of cards (scroll-snap) inside the chat, instead of a vertical
+  list — new `.hscroll`/`.hscroll-item` CSS in `globals.css`.
+- Picking a card reuses the exact existing flow: `/api/recipe` → `RecipePreview`
+  → `cook_sessions` insert → `/cook/[id]`, same as `/suggest` and Explore already
+  did (copy-pasted that logic into `KitchenChat`, not shared yet).
+- Chat is ephemeral (no persistence) — refreshing the home page clears it. The
+  active-cook-session banner and the empty-pantry nudge (linking to `/pantry`)
+  moved into the chat header. `/suggest` page/API left untouched and still
+  reachable directly, just no longer linked from home.
+- Verified: typechecks clean; browser-tested chat rendering (greeting, empty
+  state, input) and the `/api/dish-check` + suggestion-carousel plumbing that
+  this reuses, but didn't get to fully click through a live suggest_dishes
+  round-trip before this session ended — worth a quick end-to-end check next
+  time before relying on it.
+
 ## 2026-07-07
 
 ### "I want to cook X" flow

@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import TabBar from "@/components/TabBar";
+import KitchenChat from "@/components/KitchenChat";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -36,40 +36,19 @@ export default async function HomePage() {
 
   return (
     <>
-      <main className="page fade-in">
-        <h1 className="page-title">
-          {greeting}
-          {profile.display_name ? `, ${profile.display_name}` : ""} 🔥
-        </h1>
-        <p className="page-sub">
-          {pantryCount
-            ? `${pantryCount} ingredient${pantryCount === 1 ? "" : "s"} in your pantry.`
-            : "Your pantry is empty — snap a photo to get started."}
-        </p>
-
-        {activeSession && (
-          <Link href={`/cook/${activeSession.id}`}>
-            <div className="card" style={{ marginBottom: 16, borderColor: "var(--ember-500)" }}>
-              <span className="badge badge-accent">Cooking now</span>
-              <h3 style={{ margin: "8px 0 2px" }}>
-                {(activeSession.recipe as { title?: string })?.title ?? "Your dish"}
-              </h3>
-              <p style={{ color: "var(--text-dim)", fontSize: "0.9rem" }}>
-                Step {activeSession.current_step + 1} — tap to jump back in
-              </p>
-            </div>
-          </Link>
-        )}
-
-        <div style={{ display: "grid", gap: 12 }}>
-          <Link href="/suggest" className="btn btn-primary btn-full" style={{ padding: "18px 20px", fontSize: "1.1rem" }}>
-            What can I make?
-          </Link>
-          <Link href="/pantry" className="btn btn-ghost btn-full">
-            Update my pantry
-          </Link>
-        </div>
-      </main>
+      <KitchenChat
+        greeting={`${greeting}${profile.display_name ? `, ${profile.display_name}` : ""}`}
+        pantryEmpty={!pantryCount}
+        activeSession={
+          activeSession
+            ? {
+                id: activeSession.id,
+                title: (activeSession.recipe as { title?: string })?.title ?? "Your dish",
+                step: activeSession.current_step,
+              }
+            : null
+        }
+      />
       <TabBar />
     </>
   );
