@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { ExploreDish, Recipe } from "@/lib/schemas";
 import RecipePreview from "@/components/RecipePreview";
+import RecipePreviewSkeleton from "@/components/RecipePreviewSkeleton";
 
 type Dish = ExploreDish & { id: string };
 
@@ -91,10 +92,12 @@ export default function ExploreClient({
     return (
       <main className="page fade-in">
         {!recipe ? (
-          <div style={{ textAlign: "center", padding: "80px 0", color: "var(--text-dim)" }}>
-            <span className="spinner" style={{ width: 32, height: 32, margin: "0 auto 16px", display: "block", color: "var(--ember-400)" }} />
-            Writing your {picked.title} recipe…
-          </div>
+          <>
+            <p className="page-sub" style={{ marginBottom: 12 }}>
+              Writing your {picked.title} recipe…
+            </p>
+            <RecipePreviewSkeleton />
+          </>
         ) : (
           <RecipePreview
             recipe={recipe}

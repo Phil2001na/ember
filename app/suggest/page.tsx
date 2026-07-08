@@ -6,6 +6,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { DishCheck, Recipe, Suggestion } from "@/lib/schemas";
 import RecipePreview from "@/components/RecipePreview";
+import RecipePreviewSkeleton from "@/components/RecipePreviewSkeleton";
+import Skeleton from "@/components/Skeleton";
 
 type Stage =
   | { name: "loading" }
@@ -144,9 +146,27 @@ export default function SuggestPage() {
       <h1 className="page-title">What can I make?</h1>
 
       {stage.name === "loading" && (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text-dim)" }}>
-          <span className="spinner" style={{ width: 32, height: 32, margin: "0 auto 16px", display: "block", color: "var(--ember-400)" }} />
-          Reading your pantry, thinking of dinner…
+        <div className="fade-in">
+          <div className="card" style={{ marginBottom: 20 }}>
+            <Skeleton width="60%" height="0.95rem" style={{ marginBottom: 10 }} />
+            <div style={{ display: "flex", gap: 8 }}>
+              <Skeleton height={44} radius="var(--radius)" style={{ flex: 1 }} />
+              <Skeleton width={90} height={44} radius="var(--radius)" />
+            </div>
+          </div>
+          <Skeleton width="70%" height="0.85rem" style={{ marginBottom: 12 }} />
+          <div style={{ display: "grid", gap: 12 }}>
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="card">
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
+                  <Skeleton width="55%" height="1.15rem" />
+                  <Skeleton width={80} height={22} radius={999} />
+                </div>
+                <Skeleton width="90%" height="0.9rem" style={{ marginBottom: 6 }} />
+                <Skeleton width="45%" height="0.8rem" />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -224,9 +244,21 @@ export default function SuggestPage() {
       )}
 
       {stage.name === "checking" && (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text-dim)" }}>
-          <span className="spinner" style={{ width: 32, height: 32, margin: "0 auto 16px", display: "block", color: "var(--ember-400)" }} />
-          Checking your pantry against {stage.dish}…
+        <div className="fade-in">
+          <Skeleton width="50%" height="1.3rem" style={{ marginBottom: 8 }} />
+          <Skeleton width="85%" height="0.9rem" style={{ marginBottom: 6 }} />
+          <Skeleton width="40%" height="0.8rem" style={{ marginBottom: 18 }} />
+          <div className="card">
+            <Skeleton width="45%" height="1rem" style={{ marginBottom: 10 }} />
+            <div style={{ display: "grid", gap: 10 }}>
+              {[...Array(5)].map((_, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                  <Skeleton width={`${65 - i * 5}%`} height="0.92rem" />
+                  <Skeleton width={62} height={20} radius={999} />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -290,10 +322,12 @@ export default function SuggestPage() {
       )}
 
       {stage.name === "generating" && (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text-dim)" }}>
-          <span className="spinner" style={{ width: 32, height: 32, margin: "0 auto 16px", display: "block", color: "var(--ember-400)" }} />
-          Writing your {stage.title} recipe, step by step…
-        </div>
+        <>
+          <p className="page-sub" style={{ marginBottom: 12 }}>
+            Writing your {stage.title} recipe, step by step…
+          </p>
+          <RecipePreviewSkeleton />
+        </>
       )}
 
       {stage.name === "preview" && (
