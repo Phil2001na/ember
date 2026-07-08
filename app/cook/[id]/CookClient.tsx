@@ -202,7 +202,7 @@ export default function CookClient({
     return (
       <main className="page fade-in" style={{ display: "flex", flexDirection: "column", justifyContent: "center", textAlign: "center", minHeight: "100dvh", paddingBottom: 40 }}>
         <div style={{ fontSize: "4rem", marginBottom: 8 }}>🔥</div>
-        <h1 style={{ fontSize: "2rem", marginBottom: 8 }}>You made it.</h1>
+        <h1 className="title-glow" style={{ fontSize: "2rem", marginBottom: 8 }}>You made it.</h1>
         <p style={{ color: "var(--text-dim)", marginBottom: 28 }}>
           {recipe.title} — cooked by you, coached by Ember.
         </p>
@@ -296,6 +296,7 @@ export default function CookClient({
             width: `${((stepIdx + 1) / recipe.steps.length) * 100}%`,
             background: "linear-gradient(90deg, var(--ember-500), var(--amber-400))",
             borderRadius: 2,
+            boxShadow: "0 0 10px rgba(240, 118, 43, 0.55)",
             transition: "width 0.3s",
           }}
         />
@@ -365,8 +366,8 @@ export default function CookClient({
             />
             <button
               type="button"
-              className="btn btn-ghost"
-              style={{ minWidth: 48, opacity: speakReplies ? 1 : 0.45 }}
+              className="composer-btn composer-btn-ghost"
+              style={{ opacity: speakReplies ? 1 : 0.45 }}
               onClick={() => {
                 setSpeakReplies((s) => {
                   if (s) window.speechSynthesis?.cancel();

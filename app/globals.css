@@ -1,16 +1,18 @@
-/* ─── Ember brand system ─────────────────────────────────────────
-   Warm dark-first kitchen companion. Charcoal base, ember orange/amber
-   accents, cream text. Fraunces (display) + Outfit (UI) via next/font. */
+/* ─── Ember brand system v2 ──────────────────────────────────────
+   Warm dark-first kitchen companion, glass edition. Near-black charcoal
+   with an ember glow bleeding through, film grain on top, glass surfaces
+   with specular top-light. Fraunces (display) + Outfit (UI) via next/font. */
 
 :root {
   /* palette */
-  --char-950: #12100e;
-  --char-900: #1a1714;
-  --char-850: #211d19;
-  --char-800: #2a251f;
+  --char-950: #0e0c0a;
+  --char-900: #17140f;
+  --char-850: #1e1a15;
+  --char-800: #272219;
   --char-700: #3a332b;
   --char-600: #4f463a;
 
+  --ember-600: #e05a1e;
   --ember-500: #f0762b;
   --ember-400: #f68f4d;
   --ember-300: #fbaa72;
@@ -19,26 +21,33 @@
 
   --cream: #f7efe3;
   --cream-dim: #cfc4b2;
-  --cream-faint: #948a79;
+  --cream-faint: #97917e;
 
   --green-ok: #7fb069;
   --red-warn: #e2604f;
 
-  /* semantic */
+  /* semantic — surfaces are translucent so the ember atmosphere
+     underneath tints them; glass proper (blur) lives on .sheet/.tabbar */
   --bg: var(--char-950);
-  --surface: var(--char-900);
-  --surface-2: var(--char-850);
-  --surface-3: var(--char-800);
-  --border: var(--char-700);
+  --surface: rgba(255, 249, 240, 0.045);
+  --surface-2: rgba(255, 249, 240, 0.07);
+  --surface-3: rgba(255, 249, 240, 0.1);
+  --border: rgba(255, 244, 230, 0.1);
+  --border-strong: rgba(255, 244, 230, 0.18);
   --text: var(--cream);
   --text-dim: var(--cream-dim);
   --text-faint: var(--cream-faint);
   --accent: var(--ember-500);
-  --accent-soft: rgba(240, 118, 43, 0.14);
+  --accent-soft: rgba(240, 118, 43, 0.15);
 
-  --radius: 14px;
-  --radius-lg: 20px;
-  --shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  /* glass recipe pieces */
+  --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  --glass-lo: inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+  --shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.5);
+  --glow-ember: 0 6px 24px -6px rgba(240, 118, 43, 0.55);
+
+  --radius: 16px;
+  --radius-lg: 22px;
 
   --font-display: var(--font-fraunces), Georgia, serif;
   --font-ui: var(--font-outfit), system-ui, sans-serif;
@@ -48,10 +57,12 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html {
   color-scheme: dark;
+  background: var(--bg);
 }
 
 body {
@@ -61,7 +72,35 @@ body {
   font-size: 16px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   min-height: 100dvh;
+  overscroll-behavior-y: none;
+}
+
+/* ambient ember atmosphere — fixed so it doesn't scroll away */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 60% at 50% -8%, rgba(240, 118, 43, 0.22), transparent 62%),
+    radial-gradient(80% 45% at 12% 108%, rgba(245, 185, 66, 0.1), transparent 65%),
+    radial-gradient(60% 40% at 95% 55%, rgba(224, 90, 30, 0.07), transparent 70%);
+}
+
+/* film grain — the texture layer, sits over everything */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
 }
 
 h1, h2, h3 {
@@ -73,7 +112,7 @@ h1, h2, h3 {
 
 a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; cursor: pointer; background: none; border: none; }
-input, textarea, select { font: inherit; }
+input, textarea, select { font: inherit; font-size: 16px; }
 
 ::selection { background: var(--accent); color: var(--char-950); }
 
@@ -89,12 +128,24 @@ input, textarea, select { font: inherit; }
 
 .page {
   flex: 1;
-  padding: 20px 18px calc(84px + env(safe-area-inset-bottom));
+  padding: 20px 18px calc(96px + env(safe-area-inset-bottom));
 }
 
 .page-title {
   font-size: 1.7rem;
   margin-bottom: 4px;
+  background: linear-gradient(115deg, var(--cream) 55%, var(--cream-dim));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* the loud one — home greeting, finish screens */
+.title-glow {
+  background: linear-gradient(115deg, var(--cream) 30%, var(--amber-300) 60%, var(--ember-400));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .page-sub {
@@ -103,45 +154,55 @@ input, textarea, select { font: inherit; }
   margin-bottom: 20px;
 }
 
-/* ─── bottom tab nav ─── */
+/* ─── bottom tab nav — floating glass pill ─── */
 
 .tabbar {
   position: fixed;
-  bottom: 0;
+  bottom: calc(12px + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
-  width: 100%;
-  max-width: 560px;
   display: flex;
-  background: rgba(26, 23, 20, 0.92);
-  backdrop-filter: blur(14px);
-  border-top: 1px solid var(--border);
-  padding-bottom: env(safe-area-inset-bottom);
+  gap: 2px;
+  padding: 5px;
+  border-radius: 999px;
+  background: rgba(23, 19, 14, 0.72);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--border);
+  box-shadow: var(--glass-hi), 0 16px 40px -8px rgba(0, 0, 0, 0.6);
   z-index: 50;
 }
 
 .tabbar a {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 10px 0 8px;
-  font-size: 0.7rem;
+  gap: 2px;
+  padding: 8px 17px 7px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
   color: var(--text-faint);
-  transition: color 0.15s;
+  transition: color 0.18s, background 0.18s;
 }
 
-.tabbar a.active { color: var(--accent); }
-.tabbar a svg { width: 22px; height: 22px; }
+.tabbar a.active {
+  color: var(--ember-300);
+  background: linear-gradient(180deg, rgba(240, 118, 43, 0.2), rgba(240, 118, 43, 0.08));
+  box-shadow: inset 0 1px 0 rgba(255, 200, 150, 0.14);
+}
+
+.tabbar a svg { width: 21px; height: 21px; }
 
 /* ─── primitives ─── */
 
 .card {
-  background: var(--surface);
+  background: linear-gradient(180deg, rgba(255, 249, 240, 0.065), rgba(255, 249, 240, 0.028));
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px;
+  box-shadow: var(--glass-hi), 0 8px 24px -12px rgba(0, 0, 0, 0.4);
 }
 
 .btn {
@@ -154,53 +215,65 @@ input, textarea, select { font: inherit; }
   padding: 13px 20px;
   font-weight: 600;
   font-size: 1rem;
-  transition: transform 0.08s, opacity 0.15s;
+  transition: transform 0.08s, opacity 0.15s, box-shadow 0.15s;
 }
 .btn:active { transform: scale(0.97); }
 .btn:disabled { opacity: 0.45; cursor: default; }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--ember-500), #e05a1e);
+  background: linear-gradient(180deg, var(--ember-400), var(--ember-500) 45%, var(--ember-600));
   color: #fff;
-  box-shadow: 0 4px 16px rgba(240, 118, 43, 0.3);
+  text-shadow: 0 1px 2px rgba(90, 30, 0, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(120, 40, 0, 0.4),
+    var(--glow-ember);
 }
 
 .btn-ghost {
-  background: var(--surface-2);
+  background: linear-gradient(180deg, rgba(255, 249, 240, 0.08), rgba(255, 249, 240, 0.04));
   border: 1px solid var(--border);
   color: var(--text);
+  box-shadow: var(--glass-hi);
 }
 
 .btn-full { width: 100%; }
 
 .input {
   width: 100%;
-  background: var(--surface-2);
+  background: rgba(10, 8, 6, 0.45);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 13px 14px;
   color: var(--text);
   outline: none;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-.input:focus { border-color: var(--ember-400); }
+.input:focus {
+  border-color: rgba(246, 143, 77, 0.55);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25), 0 0 0 3px rgba(240, 118, 43, 0.16);
+}
 .input::placeholder { color: var(--text-faint); }
 
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--surface-2);
+  background: linear-gradient(180deg, rgba(255, 249, 240, 0.075), rgba(255, 249, 240, 0.035));
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 8px 14px;
   font-size: 0.9rem;
   color: var(--text-dim);
+  box-shadow: var(--glass-hi);
   transition: all 0.12s;
 }
 .chip.selected {
-  background: var(--accent-soft);
-  border-color: var(--accent);
+  background: linear-gradient(180deg, rgba(240, 118, 43, 0.26), rgba(240, 118, 43, 0.12));
+  border-color: rgba(246, 143, 77, 0.5);
   color: var(--ember-300);
+  box-shadow: inset 0 1px 0 rgba(255, 200, 150, 0.2), 0 4px 14px -6px rgba(240, 118, 43, 0.4);
 }
 
 .badge {
@@ -212,10 +285,11 @@ input, textarea, select { font: inherit; }
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+  border: 1px solid transparent;
 }
-.badge-ok { background: rgba(127, 176, 105, 0.15); color: var(--green-ok); }
-.badge-warn { background: rgba(245, 185, 66, 0.14); color: var(--amber-300); }
-.badge-accent { background: var(--accent-soft); color: var(--ember-300); }
+.badge-ok { background: rgba(127, 176, 105, 0.13); color: var(--green-ok); border-color: rgba(127, 176, 105, 0.25); }
+.badge-warn { background: rgba(245, 185, 66, 0.12); color: var(--amber-300); border-color: rgba(245, 185, 66, 0.22); }
+.badge-accent { background: var(--accent-soft); color: var(--ember-300); border-color: rgba(240, 118, 43, 0.3); }
 
 .spinner {
   width: 20px;
@@ -227,6 +301,138 @@ input, textarea, select { font: inherit; }
   flex-shrink: 0;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── bottom sheets (pantry peek, mid-cook chat) ─── */
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(8, 6, 4, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.sheet {
+  position: relative;
+  background: linear-gradient(180deg, rgba(35, 29, 22, 0.92), rgba(23, 19, 14, 0.94));
+  backdrop-filter: blur(24px) saturate(1.3);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  border-radius: 24px 24px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 -16px 48px -12px rgba(0, 0, 0, 0.6);
+  max-width: 560px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  animation: sheetUp 0.28s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+
+/* grab handle */
+.sheet::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 244, 230, 0.18);
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(40px); opacity: 0.4; }
+  to { transform: none; opacity: 1; }
+}
+
+/* ─── chat composer — glass bar holding pantry + input + send ─── */
+
+.composer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(23, 19, 14, 0.72);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--border);
+  box-shadow: var(--glass-hi), 0 12px 32px -10px rgba(0, 0, 0, 0.55);
+}
+
+.composer input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  padding: 8px 6px;
+}
+.composer input::placeholder { color: var(--text-faint); }
+
+.composer-btn {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 1.1rem;
+  transition: transform 0.08s, opacity 0.15s;
+}
+.composer-btn:active { transform: scale(0.94); }
+.composer-btn:disabled { opacity: 0.4; cursor: default; }
+
+.composer-btn-ghost {
+  background: linear-gradient(180deg, rgba(255, 249, 240, 0.09), rgba(255, 249, 240, 0.04));
+  border: 1px solid var(--border);
+  box-shadow: var(--glass-hi);
+}
+
+.composer-btn-send {
+  background: linear-gradient(180deg, var(--ember-400), var(--ember-500) 45%, var(--ember-600));
+  color: #fff;
+  font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(120, 40, 0, 0.4),
+    var(--glow-ember);
+}
+
+/* ─── chat bubbles ─── */
+
+.bubble {
+  max-width: 85%;
+  border-radius: 18px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+}
+
+.bubble-user {
+  background: linear-gradient(180deg, rgba(240, 118, 43, 0.3), rgba(240, 118, 43, 0.16));
+  border: 1px solid rgba(246, 143, 77, 0.35);
+  border-bottom-right-radius: 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 200, 150, 0.16);
+}
+
+.bubble-ai {
+  background: linear-gradient(180deg, rgba(255, 249, 240, 0.07), rgba(255, 249, 240, 0.035));
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 6px;
+  box-shadow: var(--glass-hi);
+}
+
+/* ─── carousels ─── */
 
 .hscroll {
   display: flex;
@@ -247,4 +453,9 @@ input, textarea, select { font: inherit; }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in, .sheet, .sheet-backdrop { animation: none; }
+  .spinner { animation-duration: 1.2s; }
 }

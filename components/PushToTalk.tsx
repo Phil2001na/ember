@@ -66,7 +66,7 @@ export default function PushToTalk({
   return (
     <button
       type="button"
-      className="btn"
+      className={`composer-btn ${state === "recording" ? "" : "composer-btn-ghost"}`}
       disabled={disabled || state === "transcribing"}
       onPointerDown={(e) => {
         e.preventDefault();
@@ -76,11 +76,15 @@ export default function PushToTalk({
       onPointerLeave={stop}
       onPointerCancel={stop}
       style={{
-        background: state === "recording" ? "var(--red-warn)" : "var(--surface-2)",
-        border: `1px solid ${state === "recording" ? "var(--red-warn)" : "var(--border)"}`,
-        minWidth: 52,
         touchAction: "none",
-        transition: "background 0.15s",
+        transition: "background 0.15s, box-shadow 0.15s",
+        ...(state === "recording"
+          ? {
+              background: "linear-gradient(180deg, #ef7263, var(--red-warn) 45%, #c74534)",
+              boxShadow:
+                "inset 0 1px 0 rgba(255,255,255,0.3), 0 6px 20px -6px rgba(226,96,79,0.6)",
+            }
+          : {}),
       }}
       aria-label="Hold to talk"
     >

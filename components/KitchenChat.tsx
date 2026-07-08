@@ -157,10 +157,11 @@ export default function KitchenChat({
         margin: "0 auto",
         display: "flex",
         flexDirection: "column",
+        zIndex: 60,
       }}
     >
       <div style={{ padding: "20px 18px 10px" }}>
-        <h1 className="page-title" style={{ fontSize: "1.35rem", marginBottom: activeSession ? 8 : 0 }}>
+        <h1 className="page-title title-glow" style={{ fontSize: "1.35rem", marginBottom: activeSession ? 8 : 0 }}>
           {greeting} 🔥
         </h1>
         {activeSession && (
@@ -183,7 +184,7 @@ export default function KitchenChat({
         </div>
       )}
 
-      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: "6px 18px", display: "grid", gap: 12, alignContent: "start" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "6px 18px", display: "grid", gap: 12, alignContent: "start" }}>
         {messages.length === 0 && (
           <p style={{ color: "var(--text-faint)", fontSize: "0.9rem", textAlign: "center", padding: "40px 10px" }}>
             Tell me what you want to cook, or what you've got and I'll figure out the rest.
@@ -194,7 +195,7 @@ export default function KitchenChat({
           const suggestionGroups = messageSuggestions(m);
           const pantryUpdates = messagePantryUpdates(m);
           return (
-            <div key={m.id} style={{ display: "grid", gap: 10, justifyItems: m.role === "user" ? "end" : "start" }}>
+            <div key={m.id} style={{ display: "grid", gap: 10, minWidth: 0, maxWidth: "100%", justifyItems: m.role === "user" ? "end" : "start" }}>
               {pantryUpdates.map((u, i) => (
                 <span key={`pu-${i}`} className="badge badge-accent" style={{ justifySelf: "start" }}>
                   🧺{" "}
@@ -208,16 +209,8 @@ export default function KitchenChat({
               ))}
               {text && (
                 <div
-                  style={{
-                    justifySelf: m.role === "user" ? "end" : "start",
-                    maxWidth: "85%",
-                    background: m.role === "user" ? "var(--accent-soft)" : "var(--surface-2)",
-                    border: `1px solid ${m.role === "user" ? "var(--ember-500)" : "var(--border)"}`,
-                    borderRadius: 14,
-                    padding: "10px 13px",
-                    fontSize: "0.95rem",
-                    whiteSpace: "pre-wrap",
-                  }}
+                  className={m.role === "user" ? "bubble bubble-user" : "bubble bubble-ai"}
+                  style={{ justifySelf: m.role === "user" ? "end" : "start" }}
                 >
                   {text}
                 </div>
@@ -238,25 +231,25 @@ export default function KitchenChat({
         )}
       </div>
 
-      <form onSubmit={submit} style={{ display: "flex", gap: 8, padding: "10px 18px" }}>
-        <button
-          type="button"
-          className="btn btn-ghost"
-          style={{ minWidth: 48, padding: "12px 0", fontSize: "1.1rem" }}
-          onClick={() => setPantryOpen(true)}
-          aria-label="Open pantry"
-        >
-          🧺
-        </button>
-        <input
-          className="input"
-          placeholder="e.g. I've got chicken and rice, no idea what to do…"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-        />
-        <button className="btn btn-primary" disabled={busy || !input.trim()}>
-          ↑
-        </button>
+      <form onSubmit={submit} style={{ padding: "10px 14px" }}>
+        <div className="composer">
+          <button
+            type="button"
+            className="composer-btn composer-btn-ghost"
+            onClick={() => setPantryOpen(true)}
+            aria-label="Open pantry"
+          >
+            🧺
+          </button>
+          <input
+            placeholder="e.g. I've got chicken and rice, no idea…"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+          />
+          <button className="composer-btn composer-btn-send" disabled={busy || !input.trim()}>
+            ↑
+          </button>
+        </div>
       </form>
 
       <PantrySheet open={pantryOpen} onClose={() => setPantryOpen(false)} />

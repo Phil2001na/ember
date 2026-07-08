@@ -43,35 +43,13 @@ export default function ChatDrawer({
   }
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 100,
-        background: "rgba(0,0,0,0.5)",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "flex-end",
-      }}
-      onClick={onClose}
-    >
+    <div className="sheet-backdrop" onClick={onClose}>
       <div
-        className="fade-in"
+        className="sheet"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "var(--surface)",
-          borderRadius: "20px 20px 0 0",
-          border: "1px solid var(--border)",
-          borderBottom: "none",
-          maxWidth: 560,
-          width: "100%",
-          margin: "0 auto",
-          height: "70dvh",
-          display: "flex",
-          flexDirection: "column",
-        }}
+        style={{ height: "70dvh" }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px 8px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 18px 8px" }}>
           <h3 style={{ fontSize: "1.05rem" }}>Ask Ember 🔥</h3>
           <button onClick={onClose} style={{ color: "var(--text-faint)", padding: 6 }}>
             ✕
@@ -90,16 +68,8 @@ export default function ChatDrawer({
             return (
               <div
                 key={m.id}
-                style={{
-                  justifySelf: m.role === "user" ? "end" : "start",
-                  maxWidth: "85%",
-                  background: m.role === "user" ? "var(--accent-soft)" : "var(--surface-2)",
-                  border: `1px solid ${m.role === "user" ? "var(--ember-500)" : "var(--border)"}`,
-                  borderRadius: 14,
-                  padding: "10px 13px",
-                  fontSize: "0.95rem",
-                  whiteSpace: "pre-wrap",
-                }}
+                className={m.role === "user" ? "bubble bubble-user" : "bubble bubble-ai"}
+                style={{ justifySelf: m.role === "user" ? "end" : "start" }}
               >
                 {text}
               </div>
@@ -112,17 +82,18 @@ export default function ChatDrawer({
           )}
         </div>
 
-        <form onSubmit={submit} style={{ display: "flex", gap: 8, padding: "12px 18px calc(14px + env(safe-area-inset-bottom))" }}>
-          {extraControls}
-          <input
-            className="input"
-            placeholder="e.g. I think I added too much salt…"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-          />
-          <button className="btn btn-primary" disabled={busy || !input.trim()}>
-            ↑
-          </button>
+        <form onSubmit={submit} style={{ padding: "12px 14px calc(14px + env(safe-area-inset-bottom))" }}>
+          <div className="composer" style={{ background: "rgba(14, 12, 10, 0.5)" }}>
+            {extraControls}
+            <input
+              placeholder="e.g. I think I added too much salt…"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+            />
+            <button className="composer-btn composer-btn-send" disabled={busy || !input.trim()}>
+              ↑
+            </button>
+          </div>
         </form>
       </div>
     </div>

@@ -53,35 +53,13 @@ export default function PantrySheet({
   }
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 100,
-        background: "rgba(0,0,0,0.5)",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "flex-end",
-      }}
-      onClick={onClose}
-    >
+    <div className="sheet-backdrop" onClick={onClose}>
       <div
-        className="fade-in"
+        className="sheet"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "var(--surface)",
-          borderRadius: "20px 20px 0 0",
-          border: "1px solid var(--border)",
-          borderBottom: "none",
-          maxWidth: 560,
-          width: "100%",
-          margin: "0 auto",
-          maxHeight: "70dvh",
-          display: "flex",
-          flexDirection: "column",
-        }}
+        style={{ maxHeight: "70dvh" }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px 4px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 18px 4px" }}>
           <h3 style={{ fontSize: "1.05rem" }}>Your pantry 🧺</h3>
           <button onClick={onClose} style={{ color: "var(--text-faint)", padding: 6 }}>
             ✕

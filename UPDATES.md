@@ -1,5 +1,33 @@
 # Ember — update log
 
+## 2026-07-08 03:20
+
+### UI glow-up — glass, gloss, gradients, grain
+- Rebuilt the brand system in `globals.css` (same class/token names, whole new look):
+  - Ambient ember atmosphere: fixed radial glows (ember from the top, amber from a
+    corner) bleeding through a near-black base, plus an SVG film-grain overlay
+    (`fractalNoise`, blend-mode overlay) over the whole app — the texture layer.
+  - Glass surfaces everywhere: translucent warm-white surfaces with specular
+    top-light (`inset 0 1px 0` highlights), gradient cards, glossy 3-stop ember
+    gradient on primary buttons with inner sheen + outer glow.
+  - Tab bar is now a floating glass pill (backdrop blur + saturate) with a lit
+    ember pill on the active tab, instead of a full-width bottom bar.
+  - New primitives: `.sheet`/`.sheet-backdrop` (glass bottom sheets with grab
+    handle + slide-up spring), `.composer`/`.composer-btn` (pill chat bar),
+    `.bubble-user`/`.bubble-ai` (gradient chat bubbles), `.title-glow`
+    (cream→amber→ember gradient text for hero headings).
+- Components moved onto the new primitives: KitchenChat (glass composer, gradient
+  bubbles, glowing greeting), PantrySheet + ChatDrawer (glass sheets), PushToTalk +
+  mute (round composer buttons, recording = red glow), cook progress bar glow,
+  "You made it." gradient title. Theme color → `#0e0c0a` (layout + manifest).
+- Fixes found while verifying in-browser: pantry sheet rendered *under* the
+  floating tab bar (KitchenChat's fixed container needed `zIndex: 60`), and the
+  suggestion carousel leaked a horizontal scrollbar into the chat scroll area
+  (`minWidth: 0` on message rows + `overflowX: hidden`).
+- Verified every key screen in Playwright: home/chat (bubbles + carousel), pantry
+  sheet, pantry page, explore, cook step, Ask Ember drawer, finish screen,
+  onboarding. Typechecks clean.
+
 ## 2026-07-07 (4) 22:30
 
 ### Self-maintaining pantry (conversational)
