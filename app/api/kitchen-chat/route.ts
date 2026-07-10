@@ -7,7 +7,11 @@ import {
 } from "ai";
 import { NextResponse } from "next/server";
 import { brain } from "@/lib/ai";
-import { PantryUpdateSchema, SuggestionsSchema } from "@/lib/schemas";
+import {
+  PantryUpdateSchema,
+  ShoppingListUpdateSchema,
+  SuggestionsSchema,
+} from "@/lib/schemas";
 import { loadKitchen, kitchenPrompt } from "@/lib/kitchen";
 import { createClient } from "@/lib/supabase/server";
 
@@ -43,7 +47,15 @@ ingredients ("I bought eggs and mince"), or that something is finished, gone off
 or they don't actually have it, call update_pantry — adds and removals in one
 call, no need to ask permission for obvious ones, just do it and carry on
 naturally. For removals use the EXACT item names from their pantry above. If they
-list ingredients they have on hand that aren't in the pantry yet, add those too.`,
+list ingredients they have on hand that aren't in the pantry yet, add those too.
+
+They also keep a shopping list (shown above). When they say they NEED something
+they don't have ("I need to buy parmesan", "put milk on the list"), or a dish
+they've settled on needs ingredients they lack, call update_shopping_list to add
+those — include a short reason like "for lasagna" when it comes from a dish.
+Never add something that's already in their pantry. When they say they BOUGHT
+something, that goes to update_pantry as an add AND update_shopping_list as a
+remove if it was on the list.`,
     messages: await convertToModelMessages(messages),
     tools: {
       suggest_dishes: tool({
@@ -85,6 +97,56 @@ list ingredients they have on hand that aren't in the pantry yet, add those too.
           }
 
           return { added, removed };
+        },
+      }),
+      update_shopping_list: tool({
+        description:
+          "Add or remove items on the cook's shopping list — when they need to buy something, a chosen dish needs things they lack, or a listed item was bought / is no longer needed.",
+        inputSchema: ShoppingListUpdateSchema,
+        execute: async ({ add, remove }) => {
+          const supabase = await createClient();
+          const pantryNames = new Set(kitchen.pantry.map((p) => p.name.toLowerCase()));
+          const added: string[] = [];
+          const removed: string[] = [];
+          const alreadyHave: string[] = [];
+
+          const seen = new Set<string>();
+          const toAdd: typeof add = [];
+          for (const a of add) {
+            const name = a.name.trim().toLowerCase();
+            if (!name || seen.has(name)) continue;
+            seen.add(name);
+            if (pantryNames.has(name)) alreadyHave.push(name);
+            else toAdd.push({ ...a, name });
+          }
+          if (toAdd.length) {
+            const { data } = await supabase
+              .from("shopping_items")
+              .upsert(
+                toAdd.map((a) => ({
+                  user_id: kitchen.userId,
+                  name: a.name,
+                  quantity_text: a.quantity,
+                  reason: a.reason,
+                })),
+                { onConflict: "user_id,name" }
+              )
+              .select("name");
+            added.push(...(data?.map((d) => d.name) ?? []));
+          }
+
+          const toRemove = [...new Set(remove.map((n) => n.trim().toLowerCase()))].filter(Boolean);
+          if (toRemove.length) {
+            const { data } = await supabase
+              .from("shopping_items")
+              .delete()
+              .eq("user_id", kitchen.userId)
+              .in("name", toRemove)
+              .select("name");
+            removed.push(...(data?.map((d) => d.name) ?? []));
+          }
+
+          return { added, removed, already_have: alreadyHave };
         },
       }),
     },

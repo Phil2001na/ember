@@ -1,5 +1,25 @@
 # Ember — update log
 
+## 2026-07-10 16:05
+
+### Shopping list — pantry-aware, offline-safe
+- New `ember.shopping_items` table (migration `003_shopping_list.sql`, applied to
+  Supabase): name unique per user, optional quantity/reason, `checked` flag, RLS.
+- New **List** tab (`/shopping`): add items (warns if it's already in your pantry,
+  with "buy more anyway"), tick items off while shopping, "🧺 have it" moves an
+  item straight to the pantry, and "Done shopping" puts everything ticked away in
+  the pantry in one tap.
+- Offline-first: every change is saved to localStorage immediately and queued as
+  a name-keyed op; the queue flushes to Supabase on load/`online` events, so
+  ticking off with no data in the store syncs when back home. A banner shows
+  pending-sync count while offline.
+- Cook chat integration: new `update_shopping_list` tool — "I need to buy
+  parmesan" adds to the list (never items already in the pantry), "I bought X"
+  moves it pantry-ward; 🛒 badges show list changes in chat. Dish suggestion
+  cards with missing ingredients grew an "Add missing to shopping list" chip.
+- `loadKitchen`/`kitchenPrompt` now include the shopping list, so all AI routes
+  know what's already planned to be bought.
+
 ## 2026-07-08 03:20
 
 ### UI glow-up — glass, gloss, gradients, grain

@@ -26,6 +26,19 @@ const TABS = [
     ),
   },
   {
+    href: "/shopping",
+    label: "List",
+    icon: (
+      // checklist
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 5.5l1.5 1.5L8 4.5" />
+        <path d="M4 12.5l1.5 1.5L8 11.5" />
+        <path d="M4 19.5l1.5 1.5L8 18.5" />
+        <path d="M11 6h9M11 13h9M11 20h9" />
+      </svg>
+    ),
+  },
+  {
     href: "/explore",
     label: "Explore",
     icon: (

@@ -6,6 +6,7 @@ export type KitchenContext = {
   dietaryNotes: string | null;
   equipment: string[];
   pantry: { name: string; quantity_text: string | null }[];
+  shoppingList: string[];
 };
 
 /** Loads everything the AI needs to know about this user's kitchen. */
@@ -16,7 +17,7 @@ export async function loadKitchen(): Promise<KitchenContext | null> {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ data: profile }, { data: equipment }, { data: pantry }] =
+  const [{ data: profile }, { data: equipment }, { data: pantry }, { data: shopping }] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -28,6 +29,7 @@ export async function loadKitchen(): Promise<KitchenContext | null> {
         .from("pantry_items")
         .select("name, quantity_text")
         .eq("user_id", user.id),
+      supabase.from("shopping_items").select("name").eq("user_id", user.id),
     ]);
 
   return {
@@ -36,6 +38,7 @@ export async function loadKitchen(): Promise<KitchenContext | null> {
     dietaryNotes: profile?.dietary_notes ?? null,
     equipment: equipment?.map((e) => e.name) ?? [],
     pantry: pantry ?? [],
+    shoppingList: shopping?.map((s) => s.name) ?? [],
   };
 }
 
@@ -47,5 +50,8 @@ export function kitchenPrompt(k: KitchenContext): string {
     k.dietaryNotes ? `, dietary notes: ${k.dietaryNotes}` : ""
   }.
 THEIR EQUIPMENT: ${k.equipment.join(", ") || "unknown — assume just a stove and basic pots"}.
-THEIR PANTRY (everything they have): ${pantryList || "empty"}.`;
+THEIR PANTRY (everything they have): ${pantryList || "empty"}.
+THEIR SHOPPING LIST (planning to buy, they do NOT have these yet): ${
+    k.shoppingList.join(", ") || "empty"
+  }.`;
 }

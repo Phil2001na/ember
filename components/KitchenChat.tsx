@@ -29,6 +29,24 @@ function messagePantryUpdates(m: UIMessage): { added: string[]; removed: string[
   return updates;
 }
 
+function messageShoppingUpdates(
+  m: UIMessage
+): { added: string[]; removed: string[]; already_have: string[] }[] {
+  const updates: { added: string[]; removed: string[]; already_have: string[] }[] = [];
+  for (const part of m.parts) {
+    if (part.type === "tool-update_shopping_list" && part.state === "output-available" && part.output) {
+      const { added, removed, already_have } = part.output as {
+        added: string[];
+        removed: string[];
+        already_have: string[];
+      };
+      if (added?.length || removed?.length || already_have?.length)
+        updates.push({ added: added ?? [], removed: removed ?? [], already_have: already_have ?? [] });
+    }
+  }
+  return updates;
+}
+
 function messageSuggestions(m: UIMessage): Suggestion[][] {
   const groups: Suggestion[][] = [];
   for (const part of m.parts) {
@@ -62,6 +80,7 @@ export default function KitchenChat({
   const [starting, setStarting] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
   const [pantryOpen, setPantryOpen] = useState(false);
+  const [listNotice, setListNotice] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status } = useChat({
@@ -102,6 +121,25 @@ export default function KitchenChat({
       setPicked(null);
       setGenError(err instanceof Error ? err.message : "Something went wrong");
     }
+  }
+
+  async function addMissingToList(s: Suggestion) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const { error } = await supabase.from("shopping_items").upsert(
+      s.missing.map((m) => ({
+        user_id: user!.id,
+        name: m.item.trim().toLowerCase(),
+        reason: `for ${s.title.toLowerCase()}`,
+      })),
+      { onConflict: "user_id,name" }
+    );
+    setListNotice(
+      error
+        ? "Couldn't update the shopping list — try again?"
+        : `🛒 Added ${s.missing.length} item${s.missing.length === 1 ? "" : "s"} to your shopping list`
+    );
   }
 
   async function startCooking(recipe: Recipe) {
@@ -194,6 +232,7 @@ export default function KitchenChat({
           const text = messageText(m);
           const suggestionGroups = messageSuggestions(m);
           const pantryUpdates = messagePantryUpdates(m);
+          const shoppingUpdates = messageShoppingUpdates(m);
           return (
             <div key={m.id} style={{ display: "grid", gap: 10, minWidth: 0, maxWidth: "100%", justifyItems: m.role === "user" ? "end" : "start" }}>
               {pantryUpdates.map((u, i) => (
@@ -202,6 +241,18 @@ export default function KitchenChat({
                   {[
                     u.added.length ? `+ ${u.added.join(", ")}` : null,
                     u.removed.length ? `− ${u.removed.join(", ")}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join("  ·  ")}
+                </span>
+              ))}
+              {shoppingUpdates.map((u, i) => (
+                <span key={`su-${i}`} className="badge badge-accent" style={{ justifySelf: "start" }}>
+                  🛒{" "}
+                  {[
+                    u.added.length ? `+ ${u.added.join(", ")}` : null,
+                    u.removed.length ? `− ${u.removed.join(", ")}` : null,
+                    u.already_have.length ? `already in pantry: ${u.already_have.join(", ")}` : null,
                   ]
                     .filter(Boolean)
                     .join("  ·  ")}
@@ -217,13 +268,18 @@ export default function KitchenChat({
               )}
               {suggestionGroups.map((group, i) => (
                 <div key={i} style={{ width: "100%" }}>
-                  <SuggestionCarousel suggestions={group} onPick={pick} />
+                  <SuggestionCarousel suggestions={group} onPick={pick} onAddMissing={addMissingToList} />
                 </div>
               ))}
             </div>
           );
         })}
         {genError && <p style={{ color: "var(--red-warn)", fontSize: "0.85rem" }}>{genError}</p>}
+        {listNotice && (
+          <span className="badge badge-accent fade-in" style={{ justifySelf: "start" }}>
+            {listNotice}
+          </span>
+        )}
         {busy && (
           <div style={{ justifySelf: "start", color: "var(--text-dim)", display: "flex", gap: 8, alignItems: "center", padding: "4px 2px" }}>
             <span className="spinner" style={{ width: 14, height: 14 }} /> thinking…

@@ -5,18 +5,23 @@ import type { Suggestion } from "@/lib/schemas";
 export default function SuggestionCarousel({
   suggestions,
   onPick,
+  onAddMissing,
 }: {
   suggestions: Suggestion[];
   onPick: (s: Suggestion) => void;
+  onAddMissing?: (s: Suggestion) => void;
 }) {
   return (
     <div className="hscroll">
       {suggestions.map((s, i) => (
-        <button
+        <div
           key={i}
           className="card hscroll-item"
-          style={{ textAlign: "left" }}
+          style={{ textAlign: "left", cursor: "pointer" }}
+          role="button"
+          tabIndex={0}
           onClick={() => onPick(s)}
+          onKeyDown={(e) => e.key === "Enter" && onPick(s)}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
             <h3 style={{ fontSize: "1.05rem" }}>{s.title}</h3>
@@ -36,7 +41,19 @@ export default function SuggestionCarousel({
               </>
             )}
           </p>
-        </button>
+          {onAddMissing && s.missing.length > 0 && (
+            <button
+              className="chip"
+              style={{ marginTop: 10 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddMissing(s);
+              }}
+            >
+              🛒 Add {s.missing.length} missing to shopping list
+            </button>
+          )}
+        </div>
       ))}
     </div>
   );

@@ -50,6 +50,30 @@ export const PantryUpdateSchema = z.object({
 });
 export type PantryUpdate = z.infer<typeof PantryUpdateSchema>;
 
+/* ─── Shopping list update (kitchen-chat tool) ─── */
+
+export const ShoppingListUpdateSchema = z.object({
+  add: z
+    .array(
+      z.object({
+        name: z.string().describe("Item to buy, lowercase, singular, e.g. 'parmesan'"),
+        quantity: z
+          .string()
+          .nullable()
+          .describe("How much to buy if known, e.g. '500g', '2 tins', else null"),
+        reason: z
+          .string()
+          .nullable()
+          .describe("Short why, e.g. 'for lasagna', null if none"),
+      })
+    )
+    .describe("Items to add to the shopping list — never items already in the pantry"),
+  remove: z
+    .array(z.string())
+    .describe("EXACT shopping list item names to remove (bought, or no longer needed)"),
+});
+export type ShoppingListUpdate = z.infer<typeof ShoppingListUpdateSchema>;
+
 /* ─── Used-up check (after a cook) ─── */
 
 export const UsedUpSchema = z.object({
@@ -186,6 +210,15 @@ export type PantryItem = {
   quantity_text: string | null;
   source: "photo" | "manual";
   updated_at: string;
+};
+
+export type ShoppingItem = {
+  id: string;
+  name: string;
+  quantity_text: string | null;
+  reason: string | null;
+  checked: boolean;
+  created_at: string;
 };
 
 export const EQUIPMENT_OPTIONS = [
