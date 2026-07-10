@@ -1,5 +1,17 @@
 # Ember — update log
 
+## 2026-07-10 16:47
+
+### AI-drafted shopping list
+- New `/api/shopping-suggest` route: the brain drafts 5-10 items from the
+  kitchen context — restocks things marked running low, items that unlock real
+  meals with the current pantry (dish named in the reason), and genuinely
+  missing staples; respects dietary notes and dedupes against the current list.
+- List tab: "✨ Let Ember draft my list" button (primary when the list is
+  empty), skeleton rows while thinking, suggestion card with per-item +add /
+  dismiss and "Add all". Accepted suggestions keep their quantity + reason and
+  go through the existing offline-safe mutate queue. Disabled while offline.
+
 ## 2026-07-10 16:05
 
 ### Shopping list — pantry-aware, offline-safe

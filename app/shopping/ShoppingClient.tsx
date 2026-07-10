@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { ShoppingItem } from "@/lib/schemas";
+import Skeleton from "@/components/Skeleton";
+import type { ShoppingItem, ShoppingSuggestions } from "@/lib/schemas";
 
 /*
  * Offline-first: every change lands in state + localStorage immediately and is
@@ -50,6 +51,9 @@ export default function ShoppingClient({
   const [online, setOnline] = useState(true);
   const [newItem, setNewItem] = useState("");
   const [pantryWarn, setPantryWarn] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<ShoppingSuggestions["items"] | null>(null);
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestError, setSuggestError] = useState(false);
   const queueRef = useRef<Op[]>([]);
   const flushing = useRef(false);
   const pantrySet = new Set(pantryNames.map((n) => n.toLowerCase()));
@@ -211,6 +215,70 @@ export default function ShoppingClient({
     );
   }
 
+  /** Ask Ember to draft the list from the pantry. */
+  async function suggest() {
+    setSuggesting(true);
+    setSuggestError(false);
+    try {
+      const res = await fetch("/api/shopping-suggest", { method: "POST" });
+      if (!res.ok) throw new Error("suggest failed");
+      const data = (await res.json()) as ShoppingSuggestions;
+      const onList = new Set(items.map((i) => i.name));
+      setSuggestions(data.items.filter((s) => !onList.has(s.name.trim().toLowerCase())));
+    } catch {
+      setSuggestError(true);
+    } finally {
+      setSuggesting(false);
+    }
+  }
+
+  /** Add one AI suggestion to the list (keeps its quantity + reason). */
+  function addSuggestion(s: ShoppingSuggestions["items"][number]) {
+    const name = s.name.trim().toLowerCase();
+    setSuggestions((prev) => prev?.filter((x) => x !== s) ?? null);
+    if (items.some((i) => i.name === name)) return;
+    const item: ShoppingItem = {
+      id: crypto.randomUUID(),
+      name,
+      quantity_text: s.quantity,
+      reason: s.reason,
+      checked: false,
+      created_at: new Date().toISOString(),
+    };
+    mutate(
+      [item, ...items],
+      [{ kind: "upsert", name, quantity_text: s.quantity, reason: s.reason, checked: false }]
+    );
+  }
+
+  function addAllSuggestions() {
+    if (!suggestions?.length) return;
+    const fresh = suggestions.filter(
+      (s) => !items.some((i) => i.name === s.name.trim().toLowerCase())
+    );
+    setSuggestions(null);
+    if (!fresh.length) return;
+    const now = new Date().toISOString();
+    const newItems: ShoppingItem[] = fresh.map((s) => ({
+      id: crypto.randomUUID(),
+      name: s.name.trim().toLowerCase(),
+      quantity_text: s.quantity,
+      reason: s.reason,
+      checked: false,
+      created_at: now,
+    }));
+    mutate(
+      [...newItems, ...items],
+      newItems.map((i) => ({
+        kind: "upsert" as const,
+        name: i.name,
+        quantity_text: i.quantity_text,
+        reason: i.reason,
+        checked: false,
+      }))
+    );
+  }
+
   const toBuy = items.filter((i) => !i.checked);
   const inBasket = items.filter((i) => i.checked);
 
@@ -220,7 +288,7 @@ export default function ShoppingClient({
       <p className="page-sub">
         {items.length
           ? `${toBuy.length} to buy${inBasket.length ? ` · ${inBasket.length} in the basket` : ""}`
-          : "Nothing on the list. Add things here, or ask in the Cook chat."}
+          : "Nothing on the list yet — let Ember draft one from your pantry."}
       </p>
 
       {pending > 0 && (
@@ -232,6 +300,106 @@ export default function ShoppingClient({
             ? `⏳ syncing ${pending} change${pending === 1 ? "" : "s"}…`
             : `📴 offline — ${pending} change${pending === 1 ? "" : "s"} saved on this phone, will sync later`}
         </p>
+      )}
+
+      {/* AI-drafted list */}
+      {!suggestions && !suggesting && (
+        <button
+          className={items.length ? "btn btn-ghost btn-full" : "btn btn-primary btn-full"}
+          style={{ marginBottom: 16 }}
+          onClick={suggest}
+          disabled={!online}
+          title={online ? undefined : "Needs a connection"}
+        >
+          ✨ Let Ember draft my list
+        </button>
+      )}
+
+      {suggestError && (
+        <p className="badge badge-warn" style={{ display: "inline-flex", marginBottom: 14 }}>
+          Couldn&apos;t get suggestions — try again in a moment.
+        </p>
+      )}
+
+      {suggesting && (
+        <div style={{ display: "grid", gap: 8, marginBottom: 16 }}>
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="card"
+              style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px" }}
+            >
+              <Skeleton width={24} height={24} radius="50%" />
+              <div style={{ flex: 1, display: "grid", gap: 6 }}>
+                <Skeleton width={`${45 + i * 10}%`} height="0.9em" />
+                <Skeleton width="70%" height="0.7em" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {suggestions && (
+        <div className="card fade-in" style={{ marginBottom: 16, padding: "14px" }}>
+          <p style={{ fontSize: "0.9rem", marginBottom: 10 }}>
+            ✨ Based on your pantry, Ember suggests:
+          </p>
+          {suggestions.length === 0 ? (
+            <p style={{ color: "var(--text-faint)", fontSize: "0.85rem" }}>
+              Nothing to add — your pantry and list already look well stocked.
+            </p>
+          ) : (
+            <div style={{ display: "grid", gap: 8 }}>
+              {suggestions.map((s) => (
+                <div
+                  key={s.name}
+                  style={{ display: "flex", alignItems: "center", gap: 10 }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ textTransform: "capitalize" }}>{s.name}</span>
+                    {s.quantity && (
+                      <span
+                        style={{ color: "var(--text-faint)", fontSize: "0.8rem", marginLeft: 8 }}
+                      >
+                        {s.quantity}
+                      </span>
+                    )}
+                    <div style={{ color: "var(--text-faint)", fontSize: "0.75rem" }}>
+                      {s.reason}
+                    </div>
+                  </div>
+                  <button
+                    className="btn btn-ghost"
+                    style={{ padding: "6px 12px", fontSize: "0.85rem", flexShrink: 0 }}
+                    onClick={() => addSuggestion(s)}
+                    aria-label={`Add ${s.name} to the list`}
+                  >
+                    + add
+                  </button>
+                  <button
+                    onClick={() =>
+                      setSuggestions((prev) => prev?.filter((x) => x !== s) ?? null)
+                    }
+                    style={{ color: "var(--text-faint)", fontSize: "1rem", padding: "4px 6px" }}
+                    aria-label={`Dismiss ${s.name}`}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            {suggestions.length > 0 && (
+              <button className="btn btn-primary" onClick={addAllSuggestions}>
+                Add all {suggestions.length}
+              </button>
+            )}
+            <button className="btn btn-ghost" onClick={() => setSuggestions(null)}>
+              {suggestions.length > 0 ? "Dismiss" : "Close"}
+            </button>
+          </div>
+        </div>
       )}
 
       {/* manual add */}

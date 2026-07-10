@@ -74,6 +74,28 @@ export const ShoppingListUpdateSchema = z.object({
 });
 export type ShoppingListUpdate = z.infer<typeof ShoppingListUpdateSchema>;
 
+/* ─── Shopping suggestions (AI-drafted list) ─── */
+
+export const ShoppingSuggestionsSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        name: z.string().describe("Item to buy, lowercase, singular, e.g. 'parmesan'"),
+        quantity: z
+          .string()
+          .nullable()
+          .describe("Sensible amount to buy, e.g. '500g', '1 bottle', else null"),
+        reason: z
+          .string()
+          .describe(
+            "Short, concrete why — e.g. 'running low', 'unlocks a quick chicken stir-fry with your peppers'"
+          ),
+      })
+    )
+    .describe("5 to 10 suggested items, most useful first"),
+});
+export type ShoppingSuggestions = z.infer<typeof ShoppingSuggestionsSchema>;
+
 /* ─── Used-up check (after a cook) ─── */
 
 export const UsedUpSchema = z.object({
