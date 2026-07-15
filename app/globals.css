@@ -227,6 +227,8 @@ input, textarea, select { font: inherit; font-size: 16px; }
 .timer-bar::-webkit-scrollbar { display: none; }
 
 .timer-chip {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -234,6 +236,47 @@ input, textarea, select { font: inherit; font-size: 16px; }
   border-radius: 999px;
   padding: 4px 6px 4px 12px;
   border: 1px solid transparent;
+}
+
+/* fire that fills the chip as the timer heats up */
+.timer-chip-fire {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  background: linear-gradient(
+    0deg,
+    rgba(224, 90, 30, 0.95),
+    rgba(240, 118, 43, 0.75) 60%,
+    rgba(245, 185, 66, 0.4) 90%,
+    transparent
+  );
+  transition: height 1s linear;
+  pointer-events: none;
+}
+.timer-chip-paused .timer-chip-fire { opacity: 0.5; }
+.timer-chip-flames {
+  left: 0;
+  right: 0;
+  top: -9px;
+  height: 10px;
+}
+.timer-chip-main,
+.timer-chip-actions {
+  position: relative;
+  z-index: 1;
+}
+.timer-chip-main span { text-shadow: 0 1px 4px rgba(10, 8, 6, 0.85); }
+/* keep the step label readable over a tall fire fill */
+.timer-chip-fire ~ .timer-chip-main .timer-chip-step { color: var(--cream); }
+.timer-chip-label {
+  display: inline-block;
+  max-width: 96px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
 }
 .timer-chip-running {
   background: linear-gradient(180deg, rgba(240, 118, 43, 0.24), rgba(240, 118, 43, 0.1));
@@ -281,8 +324,108 @@ input, textarea, select { font: inherit; font-size: 16px; }
   border-radius: 50%;
   color: var(--text-dim);
   font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .timer-chip-icon-btn:active { transform: scale(0.92); }
+
+/* ─── flames — shared fire animation bits ─── */
+
+.flame-strip {
+  position: absolute;
+  pointer-events: none;
+  overflow: hidden;
+}
+.flame-strip i {
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -8px;
+  right: -8px;
+  background-repeat: repeat-x;
+  background-position: left bottom;
+  transform-origin: 50% 100%;
+  animation: flameFlicker 0.9s ease-in-out infinite;
+}
+/* soft red-orange glow layer behind */
+.flame-strip .flame-back {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 22' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='1' x2='0' y2='0'%3E%3Cstop offset='0' stop-color='%23f0762b'/%3E%3Cstop offset='0.55' stop-color='%23e05a1e'/%3E%3Cstop offset='1' stop-color='%23e05a1e' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0 22 C3 16 4 12 5 6 C6 12 8 15 10 22 C12 17 13 14 15 10 C17 14 18 17 20 22 C22 15 24 10 25 4 C26 10 28 16 30 22 C32 17 33 15 35 12 C37 15 38 17 40 22 C42 16 44 11 45 7 C46 11 48 16 50 22 C52 17 53 14 55 11 C57 14 58 17 60 22 C62 15 64 9 65 3 C66 9 68 15 70 22 C72 17 73 15 75 12 C77 15 78 17 80 22 C82 16 84 12 85 8 C86 12 88 16 90 22 C92 17 93 14 95 11 C97 14 98 17 100 22 C102 15 104 10 105 5 C106 10 108 16 110 22 C112 17 113 14 115 10 C117 14 118 17 120 22 Z' fill='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 92px 100%;
+  background-position-x: 37px;
+  filter: blur(2px);
+  opacity: 0.9;
+  animation-duration: 1.35s;
+  animation-delay: -0.5s;
+}
+/* bright amber licks in front */
+.flame-strip .flame-front {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 22' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='1' x2='0' y2='0'%3E%3Cstop offset='0' stop-color='%23ffd27a'/%3E%3Cstop offset='0.45' stop-color='%23f5b942'/%3E%3Cstop offset='0.8' stop-color='%23f0762b'/%3E%3Cstop offset='1' stop-color='%23f0762b' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0 22 C3 16 4 12 5 6 C6 12 8 15 10 22 C12 17 13 14 15 10 C17 14 18 17 20 22 C22 15 24 10 25 4 C26 10 28 16 30 22 C32 17 33 15 35 12 C37 15 38 17 40 22 C42 16 44 11 45 7 C46 11 48 16 50 22 C52 17 53 14 55 11 C57 14 58 17 60 22 C62 15 64 9 65 3 C66 9 68 15 70 22 C72 17 73 15 75 12 C77 15 78 17 80 22 C82 16 84 12 85 8 C86 12 88 16 90 22 C92 17 93 14 95 11 C97 14 98 17 100 22 C102 15 104 10 105 5 C106 10 108 16 110 22 C112 17 113 14 115 10 C117 14 118 17 120 22 Z' fill='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 74px 100%;
+}
+.flame-strip.paused { opacity: 0.55; }
+.flame-strip.paused i { animation-play-state: paused; }
+
+@keyframes flameFlicker {
+  0%, 100% { transform: scaleY(1) translateX(0); }
+  30% { transform: scaleY(1.14) translateX(-1.5px); }
+  55% { transform: scaleY(0.9) translateX(1.5px); }
+  80% { transform: scaleY(1.07) translateX(-0.5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flame-strip i,
+  .fire-track-ember { animation: none; }
+}
+
+/* fire progress track — step timer card */
+.fire-track-wrap {
+  position: relative;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+.fire-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-3);
+}
+.fire-track-fill {
+  position: relative;
+  height: 100%;
+  min-width: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--ember-600), var(--ember-500) 55%, var(--amber-400));
+  box-shadow: 0 0 12px rgba(240, 118, 43, 0.55);
+  transition: width 1s linear;
+}
+.fire-track-fill.paused {
+  box-shadow: none;
+  filter: saturate(0.6) brightness(0.85);
+}
+.fire-track-flames {
+  left: 2px;
+  right: 10px;
+  bottom: 7px;
+  height: 18px;
+}
+.fire-track-ember {
+  position: absolute;
+  right: -4px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 42% 42%, #fff4e6, var(--amber-300) 35%, var(--ember-500) 72%, rgba(224, 90, 30, 0));
+  animation: emberPulse 1.4s ease-in-out infinite;
+}
+.fire-track-fill.paused .fire-track-ember { animation-play-state: paused; }
+
+@keyframes emberPulse {
+  0%, 100% { box-shadow: 0 0 12px 2px rgba(240, 118, 43, 0.65); }
+  50% { box-shadow: 0 0 20px 6px rgba(240, 118, 43, 0.9); }
+}
 
 /* ─── primitives ─── */
 

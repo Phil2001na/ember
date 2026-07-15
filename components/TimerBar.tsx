@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Pause, Play, X } from "lucide-react";
+import FlameStrip from "@/components/FlameStrip";
 import type { CookTimer } from "@/lib/useCookTimers";
 
 export default function TimerBar({
@@ -25,17 +26,27 @@ export default function TimerBar({
           const mm = Math.floor(t.remainingSec / 60);
           const ss = String(t.remainingSec % 60).padStart(2, "0");
           const here = t.stepIdx === currentStepIdx;
+          const progress = t.totalSec > 0 ? 1 - t.remainingSec / t.totalSec : 0;
           return (
             <div
               key={t.stepIdx}
               className={`timer-chip ${t.finished ? "timer-chip-done" : t.running ? "timer-chip-running" : "timer-chip-paused"}`}
             >
+              {!t.finished && (
+                <div className="timer-chip-fire" style={{ height: `${10 + progress * 82}%` }}>
+                  <FlameStrip paused={!t.running} className="timer-chip-flames" />
+                </div>
+              )}
               <button
                 className="timer-chip-main"
                 onClick={() => onJump(t.stepIdx)}
-                aria-label={`Jump to step ${t.stepIdx + 1}`}
+                title={t.label}
+                aria-label={`Jump to step ${t.stepIdx + 1}: ${t.label}`}
               >
-                <span className="timer-chip-step">Step {t.stepIdx + 1}{here ? " · here" : ""}</span>
+                <span className="timer-chip-step">
+                  <span className="timer-chip-label">{t.label}</span>
+                  {here ? " · here" : ""}
+                </span>
                 <span className="timer-chip-time" style={t.finished ? { display: "inline-flex", alignItems: "center", gap: 4 } : undefined}>
                   {t.finished ? (
                     <>
