@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, ShoppingCart } from "lucide-react";
 import type { Suggestion } from "@/lib/schemas";
 
 export default function SuggestionCarousel({
@@ -26,7 +27,13 @@ export default function SuggestionCarousel({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
             <h3 style={{ fontSize: "1.05rem" }}>{s.title}</h3>
             <span className={`badge ${s.match === "have-everything" ? "badge-ok" : "badge-warn"}`}>
-              {s.match === "have-everything" ? "✓ have it all" : `${s.missing.length} missing`}
+              {s.match === "have-everything" ? (
+                <>
+                  <Check /> have it all
+                </>
+              ) : (
+                `${s.missing.length} missing`
+              )}
             </span>
           </div>
           <p style={{ color: "var(--text-dim)", fontSize: "0.88rem", margin: "6px 0" }}>{s.description}</p>
@@ -50,7 +57,7 @@ export default function SuggestionCarousel({
                 onAddMissing(s);
               }}
             >
-              🛒 Add {s.missing.length} missing to shopping list
+              <ShoppingCart size={14} /> Add {s.missing.length} missing to shopping list
             </button>
           )}
         </div>

@@ -1,5 +1,29 @@
 # Ember — update log
 
+## 2026-07-15 16:30
+
+### UI upgrade: on-brand outline icons + mockup-driven polish
+- Added `lucide-react`; every emoji glyph in the UI (🔥💬🧺🛒📖✨🎤✓✕ arrows,
+  play/pause, etc.) replaced with stroke-style icons tinted to the ember
+  palette — consistent across tab bar, cook flow, chat, pantry, shopping,
+  explore, saved, and profile. The big flame on the finish screen stays.
+- Tab bar: floating pill → wide labeled glass bar (icon + label per tab,
+  active tab glows ember), per the generated design mockup.
+- Recipe preview rebuilt to the mockup: "Let's get cooking." serif heading,
+  Ingredients card with divided bullet rows + "View all ingredients"
+  expander, "You'll use" equipment tiles with keyword-matched icons,
+  pill-shaped Start cooking button.
+- Cook step screen: icon back button + centered title + outlined "n / N"
+  step pill, bigger serif step heading, roomier body text, "Watch for" card
+  with lightbulb icon, Back/Next pill buttons with arrows, "Ask Ember
+  anything" button with speech-bubble icon.
+- Finish screen: "You *made it*." italic gradient accent, new "Great work!"
+  card, save action restyled as an icon row card, Back home pill with home
+  icon.
+- Buttons are now pill-shaped app-wide; new shared CSS primitives
+  (`.section-head`, `.list-card`/`.list-row`, `.equip-tile`, `.icon-btn`,
+  `.row-card`, `.badge-outline`, `.accent-serif`).
+
 ## 2026-07-15 00:00
 
 ### Cook session: shared, concurrent step timers

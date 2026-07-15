@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { ExploreDish, Recipe } from "@/lib/schemas";
 import RecipePreview from "@/components/RecipePreview";
@@ -138,7 +139,13 @@ export default function ExploreClient({
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                 <h3 style={{ fontSize: "1.1rem" }}>{dish.title}</h3>
                 <span className={`badge ${missing.length === 0 ? "badge-ok" : "badge-warn"}`}>
-                  {missing.length === 0 ? "✓ can cook now" : `${missing.length} to buy`}
+                  {missing.length === 0 ? (
+                    <>
+                      <Check /> can cook now
+                    </>
+                  ) : (
+                    `${missing.length} to buy`
+                  )}
                 </span>
               </div>
               <p style={{ color: "var(--text-dim)", fontSize: "0.9rem", margin: "6px 0" }}>
@@ -159,9 +166,13 @@ export default function ExploreClient({
             <span className="spinner" /> Dreaming up dishes…
           </>
         ) : dishes.length ? (
-          "More ideas ✨"
+          <>
+            More ideas <Sparkles />
+          </>
         ) : (
-          "Generate dishes ✨"
+          <>
+            Generate dishes <Sparkles />
+          </>
         )}
       </button>
     </main>

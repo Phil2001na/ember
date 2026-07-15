@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ShoppingBasket, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { PantryItem } from "@/lib/schemas";
 
@@ -60,15 +61,17 @@ export default function PantrySheet({
         style={{ maxHeight: "70dvh" }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 18px 4px" }}>
-          <h3 style={{ fontSize: "1.05rem" }}>Your pantry 🧺</h3>
-          <button onClick={onClose} style={{ color: "var(--text-faint)", padding: 6 }}>
-            ✕
+          <h3 style={{ fontSize: "1.05rem", display: "flex", alignItems: "center", gap: 8 }}>
+            Your pantry <ShoppingBasket size={17} style={{ color: "var(--ember-400)" }} />
+          </h3>
+          <button className="icon-btn" onClick={onClose} aria-label="Close">
+            <X size={18} />
           </button>
         </div>
         <p style={{ color: "var(--text-dim)", fontSize: "0.82rem", padding: "0 18px 10px" }}>
           Tap anything you don&apos;t actually have.{" "}
           <Link href="/pantry" style={{ color: "var(--ember-300)", textDecoration: "underline" }}>
-            Full pantry &amp; camera scan →
+            Full pantry &amp; camera scan
           </Link>
         </p>
 
@@ -89,7 +92,7 @@ export default function PantrySheet({
                   {item.quantity_text && (
                     <span style={{ fontSize: "0.75rem", opacity: 0.7 }}> · {item.quantity_text}</span>
                   )}
-                  <span style={{ opacity: 0.5, marginLeft: 4 }}>✕</span>
+                  <X size={13} style={{ opacity: 0.5, marginLeft: 2 }} />
                 </button>
               ))}
             </div>

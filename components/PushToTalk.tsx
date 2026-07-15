@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Mic } from "lucide-react";
 
 type State = "idle" | "recording" | "transcribing";
 
@@ -88,7 +89,7 @@ export default function PushToTalk({
       }}
       aria-label="Hold to talk"
     >
-      {state === "transcribing" ? <span className="spinner" style={{ width: 16, height: 16 }} /> : "🎤"}
+      {state === "transcribing" ? <span className="spinner" style={{ width: 16, height: 16 }} /> : <Mic size={19} />}
     </button>
   );
 }

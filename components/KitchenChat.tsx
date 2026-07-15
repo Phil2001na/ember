@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
+import { ArrowUp, CookingPot, Flame, ShoppingBasket, ShoppingCart } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Recipe, Suggestion } from "@/lib/schemas";
 import RecipePreview from "@/components/RecipePreview";
@@ -138,7 +139,7 @@ export default function KitchenChat({
     setListNotice(
       error
         ? "Couldn't update the shopping list — try again?"
-        : `🛒 Added ${s.missing.length} item${s.missing.length === 1 ? "" : "s"} to your shopping list`
+        : `Added ${s.missing.length} item${s.missing.length === 1 ? "" : "s"} to your shopping list`
     );
   }
 
@@ -199,12 +200,12 @@ export default function KitchenChat({
       }}
     >
       <div style={{ padding: "20px 18px 10px" }}>
-        <h1 className="page-title title-glow" style={{ fontSize: "1.35rem", marginBottom: activeSession ? 8 : 0 }}>
-          {greeting} 🔥
+        <h1 className="page-title title-glow" style={{ fontSize: "1.35rem", marginBottom: activeSession ? 8 : 0, display: "flex", alignItems: "center", gap: 8 }}>
+          {greeting} <Flame size={20} style={{ color: "var(--ember-400)", flexShrink: 0 }} />
         </h1>
         {activeSession && (
           <Link href={`/cook/${activeSession.id}`} className="badge badge-accent" style={{ display: "inline-flex" }}>
-            🍳 Resume {activeSession.title} — step {activeSession.step + 1}
+            <CookingPot /> Resume {activeSession.title} — step {activeSession.step + 1}
           </Link>
         )}
       </div>
@@ -237,7 +238,7 @@ export default function KitchenChat({
             <div key={m.id} style={{ display: "grid", gap: 10, minWidth: 0, maxWidth: "100%", justifyItems: m.role === "user" ? "end" : "start" }}>
               {pantryUpdates.map((u, i) => (
                 <span key={`pu-${i}`} className="badge badge-accent" style={{ justifySelf: "start" }}>
-                  🧺{" "}
+                  <ShoppingBasket />{" "}
                   {[
                     u.added.length ? `+ ${u.added.join(", ")}` : null,
                     u.removed.length ? `− ${u.removed.join(", ")}` : null,
@@ -248,7 +249,7 @@ export default function KitchenChat({
               ))}
               {shoppingUpdates.map((u, i) => (
                 <span key={`su-${i}`} className="badge badge-accent" style={{ justifySelf: "start" }}>
-                  🛒{" "}
+                  <ShoppingCart />{" "}
                   {[
                     u.added.length ? `+ ${u.added.join(", ")}` : null,
                     u.removed.length ? `− ${u.removed.join(", ")}` : null,
@@ -277,7 +278,7 @@ export default function KitchenChat({
         {genError && <p style={{ color: "var(--red-warn)", fontSize: "0.85rem" }}>{genError}</p>}
         {listNotice && (
           <span className="badge badge-accent fade-in" style={{ justifySelf: "start" }}>
-            {listNotice}
+            <ShoppingCart /> {listNotice}
           </span>
         )}
         {busy && (
@@ -295,15 +296,15 @@ export default function KitchenChat({
             onClick={() => setPantryOpen(true)}
             aria-label="Open pantry"
           >
-            🧺
+            <ShoppingBasket size={19} />
           </button>
           <input
             placeholder="e.g. I've got chicken and rice, no idea…"
             value={input}
             onChange={(e) => setInput(e.target.value)}
           />
-          <button className="composer-btn composer-btn-send" disabled={busy || !input.trim()}>
-            ↑
+          <button className="composer-btn composer-btn-send" disabled={busy || !input.trim()} aria-label="Send">
+            <ArrowUp size={19} />
           </button>
         </div>
       </form>

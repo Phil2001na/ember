@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BookMarked, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import TabBar from "@/components/TabBar";
 
@@ -46,8 +47,12 @@ export default async function ProfilePage() {
           className="card"
           style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
         >
-          <span>📖 Saved recipes</span>
-          <span style={{ color: "var(--text-faint)" }}>{savedCount ?? 0} →</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 9 }}>
+            <BookMarked size={17} style={{ color: "var(--ember-400)" }} /> Saved recipes
+          </span>
+          <span style={{ color: "var(--text-faint)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+            {savedCount ?? 0} <ChevronRight size={16} />
+          </span>
         </Link>
       </main>
       <TabBar />

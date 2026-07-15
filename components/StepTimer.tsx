@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import type { CookTimer } from "@/lib/useCookTimers";
 
 export default function StepTimer({
@@ -39,8 +40,14 @@ export default function StepTimer({
     >
       <div>
         <span style={{ fontSize: "0.8rem", color: "var(--text-faint)" }}>TIMER</span>
-        <p style={{ fontSize: "1.8rem", fontFamily: "var(--font-display)", fontVariantNumeric: "tabular-nums" }}>
-          {finished ? "Done! ✓" : `${mm}:${ss}`}
+        <p style={{ fontSize: "1.8rem", fontFamily: "var(--font-display)", fontVariantNumeric: "tabular-nums", display: "flex", alignItems: "center", gap: 8 }}>
+          {finished ? (
+            <>
+              Done! <Check size={24} style={{ color: "var(--green-ok)" }} />
+            </>
+          ) : (
+            `${mm}:${ss}`
+          )}
         </p>
       </div>
       {!finished && (

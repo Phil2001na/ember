@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Recipe, SavedRecipe } from "@/lib/schemas";
 import RecipePreview from "@/components/RecipePreview";
@@ -81,10 +82,10 @@ export default function SavedClient({ initialRecipes }: { initialRecipes: SavedR
             </button>
             <button
               onClick={() => remove(r.id)}
-              style={{ color: "var(--text-faint)", fontSize: "1.1rem", padding: "4px 8px" }}
+              style={{ color: "var(--text-faint)", padding: "4px 8px", display: "inline-flex" }}
               aria-label={`Remove ${r.recipe.title}`}
             >
-              ✕
+              <X size={17} />
             </button>
           </div>
         ))}
