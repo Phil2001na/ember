@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Camera, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { PantryItem, VisionResult } from "@/lib/schemas";
 
@@ -121,7 +122,9 @@ export default function PantryClient({
             <span className="spinner" /> Reading your kitchen…
           </>
         ) : (
-          <>📸 Scan with camera</>
+          <>
+            <Camera /> Scan with camera
+          </>
         )}
       </button>
 
@@ -204,10 +207,10 @@ export default function PantryClient({
             </div>
             <button
               onClick={() => remove(item.id)}
-              style={{ color: "var(--text-faint)", fontSize: "1.1rem", padding: "4px 8px" }}
+              style={{ color: "var(--text-faint)", padding: "4px 8px", display: "inline-flex" }}
               aria-label={`Remove ${item.name}`}
             >
-              ✕
+              <X size={17} />
             </button>
           </div>
         ))}

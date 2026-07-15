@@ -4,6 +4,22 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bookmark,
+  BookmarkCheck,
+  Check,
+  ChevronRight,
+  CircleCheck,
+  Flame,
+  Home,
+  Lightbulb,
+  MessageCircle,
+  ShoppingBasket,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { applyAmendment } from "@/lib/recipe";
 import type { Recipe, RecipeStep } from "@/lib/schemas";
@@ -204,11 +220,23 @@ export default function CookClient({
   if (done) {
     return (
       <main className="page fade-in" style={{ display: "flex", flexDirection: "column", justifyContent: "center", textAlign: "center", minHeight: "100dvh", paddingBottom: 40 }}>
-        <div style={{ fontSize: "4rem", marginBottom: 8 }}>🔥</div>
-        <h1 className="title-glow" style={{ fontSize: "2rem", marginBottom: 8 }}>You made it.</h1>
+        <div style={{ fontSize: "4.4rem", marginBottom: 10 }}>🔥</div>
+        <h1 style={{ fontSize: "2.4rem", marginBottom: 10 }}>
+          You <span className="accent-serif">made it</span>.
+        </h1>
         <p style={{ color: "var(--text-dim)", marginBottom: 28 }}>
           {recipe.title} — cooked by you, coached by Ember.
         </p>
+
+        <div className="card row-card" style={{ marginBottom: 12 }}>
+          <span className="row-card-icon">
+            <CircleCheck />
+          </span>
+          <div>
+            <h3>Great work!</h3>
+            <p>Hope you enjoyed the process as much as the meal.</p>
+          </div>
+        </div>
 
         {usedUpChecking && (
           <p style={{ color: "var(--text-faint)", fontSize: "0.85rem", marginBottom: 20, display: "flex", gap: 8, justifyContent: "center", alignItems: "center" }}>
@@ -218,7 +246,9 @@ export default function CookClient({
 
         {!pantryUpdated && usedUp && usedUp.length > 0 && (
           <div className="card fade-in" style={{ textAlign: "left", marginBottom: 20, borderColor: "var(--ember-500)" }}>
-            <h3 style={{ fontSize: "0.95rem", marginBottom: 4 }}>🧺 Pantry check</h3>
+            <h3 style={{ fontSize: "0.95rem", marginBottom: 4, fontFamily: "var(--font-ui)", fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
+              <ShoppingBasket size={17} style={{ color: "var(--ember-400)" }} /> Pantry check
+            </h3>
             <p style={{ color: "var(--text-dim)", fontSize: "0.82rem", marginBottom: 12 }}>
               Looks like this cook finished these off — tap any you still have.
             </p>
@@ -255,21 +285,28 @@ export default function CookClient({
           </div>
         )}
         {pantryUpdated && usedUp && usedUp.length > 0 && (
-          <p style={{ color: "var(--text-faint)", fontSize: "0.85rem", marginBottom: 20 }}>
-            ✓ Pantry sorted.
+          <p style={{ color: "var(--text-faint)", fontSize: "0.85rem", marginBottom: 20, display: "flex", gap: 6, justifyContent: "center", alignItems: "center" }}>
+            <Check size={15} style={{ color: "var(--green-ok)" }} /> Pantry sorted.
           </p>
         )}
 
         <button
-          className="btn btn-ghost btn-full"
-          style={{ marginBottom: 12 }}
+          className="card row-card"
+          style={{ marginBottom: 16, opacity: saved ? 0.75 : undefined }}
           onClick={saveRecipe}
           disabled={saving || saved}
         >
-          {saved ? "✓ Saved to your recipes" : saving ? <span className="spinner" /> : "📖 Save this recipe"}
+          <span className="row-card-icon" style={saved ? { borderColor: "var(--green-ok)", color: "var(--green-ok)" } : undefined}>
+            {saving ? <span className="spinner" style={{ width: 18, height: 18 }} /> : saved ? <BookmarkCheck /> : <Bookmark />}
+          </span>
+          <div style={{ flex: 1 }}>
+            <h3>{saved ? "Saved to your recipes" : "Save this recipe"}</h3>
+            <p>{saved ? "Find it under You → Saved recipes" : "Add it to your collection"}</p>
+          </div>
+          {!saved && <ChevronRight size={19} style={{ color: "var(--text-faint)" }} />}
         </button>
-        <button className="btn btn-primary btn-full" onClick={() => router.push("/")}>
-          Back home
+        <button className="btn btn-primary btn-full" style={{ padding: "16px 20px" }} onClick={() => router.push("/")}>
+          <Home /> Back home
         </button>
       </main>
     );
@@ -298,12 +335,14 @@ export default function CookClient({
       />
 
       {/* header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <button onClick={() => router.push("/")} style={{ color: "var(--text-faint)", fontSize: "0.85rem" }}>
-          ← pause
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <button className="icon-btn" style={{ marginLeft: -8 }} onClick={() => router.push("/")} aria-label="Pause and go home">
+          <ArrowLeft />
         </button>
-        <span style={{ color: "var(--text-dim)", fontSize: "0.85rem" }}>{recipe.title}</span>
-        <span className="badge badge-accent">
+        <span style={{ color: "var(--text-dim)", fontSize: "0.88rem", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {recipe.title}
+        </span>
+        <span className="badge badge-outline" style={{ flexShrink: 0 }}>
           {stepIdx + 1} / {recipe.steps.length}
         </span>
       </div>
@@ -326,18 +365,24 @@ export default function CookClient({
       <div className="fade-in" key={`${stepIdx}-${step.instruction.slice(0, 24)}`} style={{ flex: 1 }}>
         {step.heat && (
           <span className={`badge ${step.heat === "high" || step.heat === "medium-high" ? "badge-warn" : "badge-accent"}`} style={{ marginBottom: 12 }}>
-            🔥 {HEAT_LABEL[step.heat]}
+            <Flame /> {HEAT_LABEL[step.heat]}
           </span>
         )}
-        <h2 style={{ fontSize: "1.55rem", lineHeight: 1.25, margin: "10px 0 14px" }}>
+        <h2 style={{ fontSize: "1.9rem", lineHeight: 1.18, margin: "10px 0 16px" }}>
           {step.instruction}
         </h2>
-        <p style={{ color: "var(--text-dim)", fontSize: "1rem", marginBottom: 16 }}>{step.detail}</p>
+        <p style={{ color: "var(--text-dim)", fontSize: "1.02rem", lineHeight: 1.65, marginBottom: 18 }}>{step.detail}</p>
 
         {step.watch_for && (
-          <div className="card" style={{ borderColor: "var(--amber-400)", background: "rgba(245,185,66,0.06)", marginBottom: 16, padding: "12px 14px" }}>
-            <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--amber-300)" }}>WATCH FOR</span>
-            <p style={{ fontSize: "0.92rem" }}>{step.watch_for}</p>
+          <div
+            className="card"
+            style={{ borderColor: "rgba(245, 185, 66, 0.45)", background: "rgba(245,185,66,0.05)", borderRadius: "var(--radius-lg)", marginBottom: 16 }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 6 }}>
+              <Lightbulb size={18} style={{ color: "var(--amber-300)" }} />
+              <span style={{ fontSize: "0.95rem", fontWeight: 600 }}>Watch for</span>
+            </div>
+            <p style={{ fontSize: "0.94rem", color: "var(--text-dim)", lineHeight: 1.55 }}>{step.watch_for}</p>
           </div>
         )}
 
@@ -357,15 +402,15 @@ export default function CookClient({
       {/* nav */}
       <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
         <button className="btn btn-ghost" onClick={() => goTo(stepIdx - 1)} disabled={stepIdx === 0} style={{ flex: 1 }}>
-          Back
+          <ArrowLeft /> Back
         </button>
         {isLast ? (
           <button className="btn btn-primary" style={{ flex: 2 }} onClick={finish}>
-            Done — I cooked it 🔥
+            Done — I cooked it <Flame />
           </button>
         ) : (
           <button className="btn btn-primary" style={{ flex: 2 }} onClick={() => goTo(stepIdx + 1)}>
-            Next step
+            Next step <ArrowRight />
           </button>
         )}
       </div>
@@ -373,10 +418,10 @@ export default function CookClient({
       {/* chat handle */}
       <button
         className="btn btn-ghost btn-full"
-        style={{ marginTop: 10, borderStyle: "dashed" }}
+        style={{ marginTop: 10 }}
         onClick={() => setChatOpen(true)}
       >
-        💬 Ask Ember anything
+        <MessageCircle /> Ask Ember anything
       </button>
 
       <ChatDrawer
@@ -406,7 +451,7 @@ export default function CookClient({
               }}
               aria-label={speakReplies ? "Mute spoken replies" : "Speak replies aloud"}
             >
-              {speakReplies ? "🔊" : "🔇"}
+              {speakReplies ? <Volume2 size={19} /> : <VolumeX size={19} />}
             </button>
           </>
         }

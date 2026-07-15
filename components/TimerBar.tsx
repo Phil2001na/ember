@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Pause, Play, X } from "lucide-react";
 import type { CookTimer } from "@/lib/useCookTimers";
 
 export default function TimerBar({
@@ -35,7 +36,15 @@ export default function TimerBar({
                 aria-label={`Jump to step ${t.stepIdx + 1}`}
               >
                 <span className="timer-chip-step">Step {t.stepIdx + 1}{here ? " · here" : ""}</span>
-                <span className="timer-chip-time">{t.finished ? "Done! ✓" : `${mm}:${ss}`}</span>
+                <span className="timer-chip-time" style={t.finished ? { display: "inline-flex", alignItems: "center", gap: 4 } : undefined}>
+                  {t.finished ? (
+                    <>
+                      Done! <Check size={13} />
+                    </>
+                  ) : (
+                    `${mm}:${ss}`
+                  )}
+                </span>
               </button>
               <div className="timer-chip-actions">
                 {!t.finished && (
@@ -45,7 +54,7 @@ export default function TimerBar({
                     onClick={() => onToggle(t.stepIdx)}
                     aria-label={t.running ? "Pause timer" : "Resume timer"}
                   >
-                    {t.running ? "⏸" : "▶"}
+                    {t.running ? <Pause size={14} /> : <Play size={14} />}
                   </button>
                 )}
                 <button
@@ -54,7 +63,7 @@ export default function TimerBar({
                   onClick={() => onDismiss(t.stepIdx)}
                   aria-label="Dismiss timer"
                 >
-                  ✕
+                  <X size={14} />
                 </button>
               </div>
             </div>

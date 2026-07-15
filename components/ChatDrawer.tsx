@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ArrowUp, Flame, X } from "lucide-react";
 import type { UIMessage } from "ai";
 
 function messageText(m: UIMessage): string {
@@ -50,9 +51,11 @@ export default function ChatDrawer({
         style={{ height: "70dvh" }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 18px 8px" }}>
-          <h3 style={{ fontSize: "1.05rem" }}>Ask Ember 🔥</h3>
-          <button onClick={onClose} style={{ color: "var(--text-faint)", padding: 6 }}>
-            ✕
+          <h3 style={{ fontSize: "1.05rem", display: "flex", alignItems: "center", gap: 8 }}>
+            Ask Ember <Flame size={17} style={{ color: "var(--ember-400)" }} />
+          </h3>
+          <button className="icon-btn" onClick={onClose} aria-label="Close">
+            <X size={18} />
           </button>
         </div>
 
@@ -90,8 +93,8 @@ export default function ChatDrawer({
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
-            <button className="composer-btn composer-btn-send" disabled={busy || !input.trim()}>
-              ↑
+            <button className="composer-btn composer-btn-send" disabled={busy || !input.trim()} aria-label="Send">
+              <ArrowUp size={19} />
             </button>
           </div>
         </form>

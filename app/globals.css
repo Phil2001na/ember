@@ -154,18 +154,20 @@ input, textarea, select { font: inherit; font-size: 16px; }
   margin-bottom: 20px;
 }
 
-/* ─── bottom tab nav — floating glass pill ─── */
+/* ─── bottom tab nav — labeled glass bar ─── */
 
 .tabbar {
   position: fixed;
   bottom: calc(12px + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
+  width: calc(100% - 28px);
+  max-width: 532px;
   display: flex;
-  gap: 2px;
-  padding: 5px;
-  border-radius: 999px;
-  background: rgba(23, 19, 14, 0.72);
+  justify-content: space-between;
+  padding: 9px 10px 8px;
+  border-radius: 24px;
+  background: rgba(23, 19, 14, 0.78);
   backdrop-filter: blur(20px) saturate(1.4);
   -webkit-backdrop-filter: blur(20px) saturate(1.4);
   border: 1px solid var(--border);
@@ -174,23 +176,22 @@ input, textarea, select { font: inherit; font-size: 16px; }
 }
 
 .tabbar a {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 8px 17px 7px;
-  border-radius: 999px;
-  font-size: 0.62rem;
+  gap: 3px;
+  padding: 6px 2px 4px;
+  border-radius: 16px;
+  font-size: 0.64rem;
   font-weight: 500;
   letter-spacing: 0.03em;
   color: var(--text-faint);
-  transition: color 0.18s, background 0.18s;
+  transition: color 0.18s;
 }
 
 .tabbar a.active {
-  color: var(--ember-300);
-  background: linear-gradient(180deg, rgba(240, 118, 43, 0.2), rgba(240, 118, 43, 0.08));
-  box-shadow: inset 0 1px 0 rgba(255, 200, 150, 0.14);
+  color: var(--ember-400);
 }
 
 .tabbar a svg { width: 21px; height: 21px; }
@@ -299,12 +300,13 @@ input, textarea, select { font: inherit; font-size: 16px; }
   justify-content: center;
   gap: 8px;
   border: none;
-  border-radius: var(--radius);
-  padding: 13px 20px;
+  border-radius: 999px;
+  padding: 14px 22px;
   font-weight: 600;
   font-size: 1rem;
   transition: transform 0.08s, opacity 0.15s, box-shadow 0.15s;
 }
+.btn svg { width: 19px; height: 19px; flex-shrink: 0; }
 .btn:active { transform: scale(0.97); }
 .btn:disabled { opacity: 0.45; cursor: default; }
 
@@ -378,6 +380,104 @@ input, textarea, select { font: inherit; font-size: 16px; }
 .badge-ok { background: rgba(127, 176, 105, 0.13); color: var(--green-ok); border-color: rgba(127, 176, 105, 0.25); }
 .badge-warn { background: rgba(245, 185, 66, 0.12); color: var(--amber-300); border-color: rgba(245, 185, 66, 0.22); }
 .badge-accent { background: var(--accent-soft); color: var(--ember-300); border-color: rgba(240, 118, 43, 0.3); }
+.badge-outline { background: transparent; color: var(--ember-300); border-color: rgba(240, 118, 43, 0.35); padding: 5px 13px; }
+
+.badge svg { width: 13px; height: 13px; }
+
+/* serif italic gradient accent inside display headings — "You *made it*." */
+.accent-serif {
+  font-style: italic;
+  background: linear-gradient(115deg, var(--ember-300), var(--amber-300));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* section header: small ember-tinted icon + bold label */
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+  font-size: 1.05rem;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.section-head svg { width: 19px; height: 19px; color: var(--ember-400); }
+
+/* card holding a stack of divided rows (ingredient list, settings-style rows) */
+.list-card { padding: 4px 16px; }
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.95rem;
+}
+.list-row:last-child { border-bottom: none; }
+.list-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ember-400);
+  flex-shrink: 0;
+}
+
+/* equipment tiles — "You'll use" grid */
+.equip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.equip-tile {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 15px;
+  border-radius: 15px;
+  background: linear-gradient(180deg, rgba(255, 249, 240, 0.06), rgba(255, 249, 240, 0.025));
+  border: 1px solid var(--border);
+  box-shadow: var(--glass-hi);
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.25;
+}
+.equip-tile svg { width: 17px; height: 17px; color: var(--cream-dim); flex-shrink: 0; }
+
+/* round icon-only button */
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--text-dim);
+  transition: transform 0.08s, color 0.15s;
+}
+.icon-btn:active { transform: scale(0.92); }
+.icon-btn svg { width: 20px; height: 20px; }
+
+/* tappable card row — icon, title + sub, chevron (finish-screen actions) */
+.row-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+}
+.row-card .row-card-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--ember-400);
+  color: var(--ember-400);
+  flex-shrink: 0;
+}
+.row-card .row-card-icon svg { width: 20px; height: 20px; }
+.row-card h3 { font-size: 0.98rem; font-family: var(--font-ui); font-weight: 600; }
+.row-card p { font-size: 0.82rem; color: var(--text-dim); }
 
 .spinner {
   width: 20px;

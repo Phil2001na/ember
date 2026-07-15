@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Check, RefreshCw, ShoppingBasket, Sparkles, WifiOff, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Skeleton from "@/components/Skeleton";
 import type { ShoppingItem, ShoppingSuggestions } from "@/lib/schemas";
@@ -296,9 +297,15 @@ export default function ShoppingClient({
           className="badge badge-warn"
           style={{ display: "inline-flex", marginBottom: 14 }}
         >
-          {online
-            ? `⏳ syncing ${pending} change${pending === 1 ? "" : "s"}…`
-            : `📴 offline — ${pending} change${pending === 1 ? "" : "s"} saved on this phone, will sync later`}
+          {online ? (
+            <>
+              <RefreshCw /> syncing {pending} change{pending === 1 ? "" : "s"}…
+            </>
+          ) : (
+            <>
+              <WifiOff /> offline — {pending} change{pending === 1 ? "" : "s"} saved on this phone, will sync later
+            </>
+          )}
         </p>
       )}
 
@@ -311,7 +318,7 @@ export default function ShoppingClient({
           disabled={!online}
           title={online ? undefined : "Needs a connection"}
         >
-          ✨ Let Ember draft my list
+          <Sparkles /> Let Ember draft my list
         </button>
       )}
 
@@ -341,8 +348,8 @@ export default function ShoppingClient({
 
       {suggestions && (
         <div className="card fade-in" style={{ marginBottom: 16, padding: "14px" }}>
-          <p style={{ fontSize: "0.9rem", marginBottom: 10 }}>
-            ✨ Based on your pantry, Ember suggests:
+          <p style={{ fontSize: "0.9rem", marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
+            <Sparkles size={16} style={{ color: "var(--ember-400)", flexShrink: 0 }} /> Based on your pantry, Ember suggests:
           </p>
           {suggestions.length === 0 ? (
             <p style={{ color: "var(--text-faint)", fontSize: "0.85rem" }}>
@@ -380,10 +387,10 @@ export default function ShoppingClient({
                     onClick={() =>
                       setSuggestions((prev) => prev?.filter((x) => x !== s) ?? null)
                     }
-                    style={{ color: "var(--text-faint)", fontSize: "1rem", padding: "4px 6px" }}
+                    style={{ color: "var(--text-faint)", padding: "4px 6px", display: "inline-flex" }}
                     aria-label={`Dismiss ${s.name}`}
                   >
-                    ✕
+                    <X size={16} />
                   </button>
                 </div>
               ))}
@@ -429,8 +436,11 @@ export default function ShoppingClient({
           className="card fade-in"
           style={{ marginBottom: 16, borderColor: "var(--amber-400)" }}
         >
-          <p style={{ fontSize: "0.9rem", marginBottom: 10 }}>
-            🧺 You&apos;ve already got <strong>{pantryWarn}</strong> in your pantry.
+          <p style={{ fontSize: "0.9rem", marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
+            <ShoppingBasket size={16} style={{ color: "var(--amber-300)", flexShrink: 0 }} />
+            <span>
+              You&apos;ve already got <strong>{pantryWarn}</strong> in your pantry.
+            </span>
           </p>
           <div style={{ display: "flex", gap: 8 }}>
             <button className="btn btn-primary" onClick={() => addItem(pantryWarn, true)}>
@@ -485,14 +495,14 @@ export default function ShoppingClient({
               onClick={() => alreadyHave(item)}
               title="Already have it — move to pantry"
             >
-              🧺 have it
+              <ShoppingBasket size={14} /> have it
             </button>
             <button
               onClick={() => remove(item)}
-              style={{ color: "var(--text-faint)", fontSize: "1.1rem", padding: "4px 6px" }}
+              style={{ color: "var(--text-faint)", padding: "4px 6px", display: "inline-flex" }}
               aria-label={`Remove ${item.name}`}
             >
-              ✕
+              <X size={17} />
             </button>
           </div>
         ))}
@@ -527,11 +537,12 @@ export default function ShoppingClient({
                     borderRadius: "50%",
                     background: "var(--green-ok)",
                     color: "var(--char-950)",
-                    fontSize: "0.85rem",
-                    fontWeight: 700,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
-                  ✓
+                  <Check size={15} strokeWidth={3} />
                 </button>
                 <span style={{ flex: 1, textTransform: "capitalize", textDecoration: "line-through" }}>
                   {item.name}

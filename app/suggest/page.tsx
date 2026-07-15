@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { DishCheck, Recipe, Suggestion } from "@/lib/schemas";
 import RecipePreview from "@/components/RecipePreview";
@@ -219,7 +220,13 @@ export default function SuggestPage() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                   <h3 style={{ fontSize: "1.15rem" }}>{s.title}</h3>
                   <span className={`badge ${s.match === "have-everything" ? "badge-ok" : "badge-warn"}`}>
-                    {s.match === "have-everything" ? "✓ have it all" : `${s.missing.length} missing`}
+                    {s.match === "have-everything" ? (
+                      <>
+                        <Check /> have it all
+                      </>
+                    ) : (
+                      `${s.missing.length} missing`
+                    )}
                   </span>
                 </div>
                 <p style={{ color: "var(--text-dim)", fontSize: "0.9rem", margin: "6px 0" }}>{s.description}</p>
@@ -286,7 +293,13 @@ export default function SuggestPage() {
                     )}
                   </span>
                   <span className={`badge ${ing.have ? "badge-ok" : "badge-warn"}`} style={{ flexShrink: 0 }}>
-                    {ing.have ? "✓ have it" : "need it"}
+                    {ing.have ? (
+                      <>
+                        <Check /> have it
+                      </>
+                    ) : (
+                      "need it"
+                    )}
                   </span>
                 </li>
               ))}
