@@ -195,6 +195,94 @@ input, textarea, select { font: inherit; font-size: 16px; }
 
 .tabbar a svg { width: 21px; height: 21px; }
 
+/* ─── floating timer bar — pinned across step navigation ─── */
+
+.timer-bar-wrap {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 560px;
+  padding: 0 14px;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.timer-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(23, 19, 14, 0.78);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--border);
+  box-shadow: var(--glass-hi), 0 16px 40px -8px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  scrollbar-width: none;
+}
+.timer-bar::-webkit-scrollbar { display: none; }
+
+.timer-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 4px 6px 4px 12px;
+  border: 1px solid transparent;
+}
+.timer-chip-running {
+  background: linear-gradient(180deg, rgba(240, 118, 43, 0.24), rgba(240, 118, 43, 0.1));
+  border-color: rgba(246, 143, 77, 0.4);
+}
+.timer-chip-paused {
+  background: rgba(255, 249, 240, 0.05);
+  border-color: var(--border);
+}
+.timer-chip-done {
+  background: rgba(127, 176, 105, 0.16);
+  border-color: rgba(127, 176, 105, 0.35);
+  animation: timerPulse 1.6s ease-out 2;
+}
+@keyframes timerPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(127, 176, 105, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(127, 176, 105, 0); }
+}
+
+.timer-chip-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+.timer-chip-step {
+  font-size: 0.62rem;
+  color: var(--text-faint);
+  letter-spacing: 0.02em;
+}
+.timer-chip-time {
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.timer-chip-actions {
+  display: flex;
+  gap: 2px;
+}
+.timer-chip-icon-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+.timer-chip-icon-btn:active { transform: scale(0.92); }
+
 /* ─── primitives ─── */
 
 .card {

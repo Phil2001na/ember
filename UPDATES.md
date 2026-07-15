@@ -1,5 +1,24 @@
 # Ember — update log
 
+## 2026-07-15 00:00
+
+### Cook session: shared, concurrent step timers
+- Timer state lifted out of `StepTimer` into a new `useCookTimers` hook owned
+  by `CookClient`, keyed by step index — timers now survive step navigation
+  and unmounts instead of resetting when you leave a step.
+- Multiple timers can run concurrently (e.g. start step 5's simmer timer,
+  move on to prep step 6, step 5 keeps counting in the background).
+- New floating `TimerBar`: a pinned pill at the top of the cook screen
+  listing every active timer with its step and remaining time; tap a chip to
+  jump back to that step, or pause/dismiss it in place.
+- Timers keep ticking against a wall-clock end time (not a naive interval
+  countdown), so they stay accurate even if the tab is backgrounded. On
+  hitting zero: haptic buzz (existing) plus a browser/PWA `Notification` when
+  permission has been granted (requested on first timer start) — the finished
+  chip also pulses green in the floating bar as an in-app alert.
+- Existing per-step Pause/Reset controls preserved, now operating on the
+  shared timer instance for that step instead of local component state.
+
 ## 2026-07-10 16:47
 
 ### AI-drafted shopping list
