@@ -8,8 +8,10 @@ import { createClient } from "@/lib/supabase/client";
 import { applyAmendment } from "@/lib/recipe";
 import type { Recipe, RecipeStep } from "@/lib/schemas";
 import StepTimer from "@/components/StepTimer";
+import TimerBar from "@/components/TimerBar";
 import ChatDrawer from "@/components/ChatDrawer";
 import PushToTalk from "@/components/PushToTalk";
+import { useCookTimers } from "@/lib/useCookTimers";
 
 const HEAT_LABEL: Record<string, string> = {
   off: "heat off",
@@ -53,6 +55,7 @@ export default function CookClient({
   const appliedTools = useRef<Set<string>>(new Set());
   const stepRef = useRef(stepIdx);
   stepRef.current = stepIdx;
+  const cookTimers = useCookTimers();
 
   const { messages, sendMessage, status } = useChat({
     messages: initialMessages,
@@ -276,7 +279,24 @@ export default function CookClient({
   const isLast = stepIdx === recipe.steps.length - 1;
 
   return (
-    <main className="page" style={{ paddingBottom: 120, minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
+    <main
+      className="page"
+      style={{
+        paddingBottom: 120,
+        paddingTop: cookTimers.timers.length ? 64 : undefined,
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <TimerBar
+        timers={cookTimers.timers}
+        currentStepIdx={stepIdx}
+        onJump={goTo}
+        onToggle={cookTimers.toggle}
+        onDismiss={cookTimers.reset}
+      />
+
       {/* header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         <button onClick={() => router.push("/")} style={{ color: "var(--text-faint)", fontSize: "0.85rem" }}>
@@ -321,7 +341,17 @@ export default function CookClient({
           </div>
         )}
 
-        {step.timer_min && <StepTimer minutes={step.timer_min} key={`timer-${stepIdx}`} />}
+        {step.timer_min && (
+          <StepTimer
+            stepIdx={stepIdx}
+            minutes={step.timer_min}
+            label={step.instruction}
+            timer={cookTimers.timers.find((t) => t.stepIdx === stepIdx)}
+            onStart={cookTimers.start}
+            onToggle={cookTimers.toggle}
+            onReset={cookTimers.reset}
+          />
+        )}
       </div>
 
       {/* nav */}

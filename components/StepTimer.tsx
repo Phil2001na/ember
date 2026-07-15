@@ -1,32 +1,28 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import type { CookTimer } from "@/lib/useCookTimers";
 
-export default function StepTimer({ minutes }: { minutes: number }) {
+export default function StepTimer({
+  stepIdx,
+  minutes,
+  label,
+  timer,
+  onStart,
+  onToggle,
+  onReset,
+}: {
+  stepIdx: number;
+  minutes: number;
+  label: string;
+  timer: CookTimer | undefined;
+  onStart: (stepIdx: number, minutes: number, label: string) => void;
+  onToggle: (stepIdx: number) => void;
+  onReset: (stepIdx: number) => void;
+}) {
   const total = Math.round(minutes * 60);
-  const [remaining, setRemaining] = useState(total);
-  const [running, setRunning] = useState(false);
-  const finished = remaining === 0;
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    if (!running) return;
-    intervalRef.current = setInterval(() => {
-      setRemaining((r) => {
-        if (r <= 1) {
-          setRunning(false);
-          try {
-            navigator.vibrate?.([300, 100, 300, 100, 600]);
-          } catch {}
-          return 0;
-        }
-        return r - 1;
-      });
-    }, 1000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [running]);
+  const remaining = timer ? timer.remainingSec : total;
+  const running = timer?.running ?? false;
+  const finished = timer?.finished ?? false;
 
   const mm = Math.floor(remaining / 60);
   const ss = String(remaining % 60).padStart(2, "0");
@@ -49,17 +45,14 @@ export default function StepTimer({ minutes }: { minutes: number }) {
       </div>
       {!finished && (
         <div style={{ display: "flex", gap: 8 }}>
-          <button className="btn btn-primary" onClick={() => setRunning((r) => !r)}>
-            {running ? "Pause" : remaining === total ? `Start ${minutes} min` : "Resume"}
+          <button
+            className="btn btn-primary"
+            onClick={() => (timer ? onToggle(stepIdx) : onStart(stepIdx, minutes, label))}
+          >
+            {timer ? (running ? "Pause" : "Resume") : `Start ${minutes} min`}
           </button>
-          {remaining !== total && (
-            <button
-              className="btn btn-ghost"
-              onClick={() => {
-                setRunning(false);
-                setRemaining(total);
-              }}
-            >
+          {timer && (
+            <button className="btn btn-ghost" onClick={() => onReset(stepIdx)}>
               Reset
             </button>
           )}
