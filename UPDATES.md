@@ -1,5 +1,22 @@
 # Ember — update log
 
+## 2026-07-15 22:40
+
+### Timer chips: activity labels + fire fill animation
+- Floating timer chips now show the step's activity ("Simmer the bolognese…")
+  instead of "Step 5", truncated with the full text on long-press/hover — no
+  more guessing which timer is which.
+- New fire fill animation: a flame bed rises inside each chip as the timer
+  gets closer to done, with animated flickering flame licks along the fire
+  line (blurred red-orange glow layer + bright amber licks, CSS-only,
+  tiled SVG so tongues keep their shape at any width). Pausing dims and
+  freezes the flames.
+- Step timer card gets a matching fire progress track: gradient bar that
+  fills left→right with flames riding the filled length and a pulsing
+  ember dot at the leading edge (per the concept image).
+- Shared `FlameStrip` component + `.flame-strip`/`.fire-track-*` CSS;
+  respects `prefers-reduced-motion`.
+
 ## 2026-07-15 16:30
 
 ### UI upgrade: on-brand outline icons + mockup-driven polish
