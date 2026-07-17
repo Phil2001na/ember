@@ -413,7 +413,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
 }
 .fire-track {
   position: relative;
-  height: 34px;
+  height: 58px;
 }
 .fire-track::after {
   content: "";

@@ -59,12 +59,12 @@ float fbm(vec2 p) {
 }
 
 vec3 fireRamp(float h) {
-  vec3 c = mix(C_EMBER6 * 0.55, C_EMBER6, smoothstep(0.0, 0.25, h));
-  c = mix(c, C_EMBER5, smoothstep(0.22, 0.45, h));
-  c = mix(c, C_EMBER4, smoothstep(0.42, 0.62, h));
-  c = mix(c, C_AMBER4, smoothstep(0.58, 0.8, h));
-  c = mix(c, C_AMBER3, smoothstep(0.74, 0.92, h));
-  c = mix(c, C_CORE, smoothstep(0.88, 1.08, h));
+  vec3 c = mix(C_EMBER6 * 0.6, C_EMBER6, smoothstep(0.0, 0.18, h));
+  c = mix(c, C_EMBER5, smoothstep(0.15, 0.35, h));
+  c = mix(c, C_EMBER4, smoothstep(0.32, 0.5, h));
+  c = mix(c, C_AMBER4, smoothstep(0.46, 0.68, h));
+  c = mix(c, C_AMBER3, smoothstep(0.62, 0.85, h));
+  c = mix(c, C_CORE, smoothstep(0.8, 1.05, h));
   return c;
 }
 
@@ -78,38 +78,45 @@ void main() {
   float n = fbm(p * 2.6 + vec2(t * 0.25, -t * 1.05));
   float n2 = fbm(p * 5.5 + vec2(-t * 0.4, -t * 1.7));
 
-  // flame-licked leading edge at the progress line
-  float e = u_progress * 1.06 - 0.03 + (n - 0.5) * 0.16 * (0.6 + 0.5 * uv.y);
-  float fill = 1.0 - smoothstep(e - 0.05, e + 0.015, uv.x);
+  // flame-licked leading edge at the progress line — two widths: a soft
+  // core ramp and a wider one that bleeds out into a glow halo
+  float e = u_progress * 1.05 - 0.02 + (n - 0.5) * 0.14 * (0.5 + 0.5 * uv.y);
+  float fillCore = smoothstep(e + 0.05, e - 0.09, uv.x);
+  float fillGlow = smoothstep(e + 0.16, e - 0.22, uv.x);
 
 #ifdef TRACK
-  // solid burning bar low, tall detaching tongues above it
-  float bar = 1.0 - smoothstep(0.24, 0.44, uv.y);
-  float tongues = smoothstep(0.48, 0.9, n * 1.25 - (uv.y - 0.3) * 0.95);
-  float heat = fill * max(bar * (0.75 + 0.5 * n2), tongues * (0.5 + 0.6 * n2));
+  // soft-topped burning bar low, tall wisping tongues fading out above it
+  float bar = smoothstep(0.42, 0.18, uv.y);
+  float tongue = smoothstep(0.15, 0.85, n * 1.1 - (uv.y - 0.26) * 0.8) * smoothstep(1.0, 0.5, uv.y);
+  float core = fillCore * max(bar * (0.8 + 0.4 * n2), tongue * (0.55 + 0.6 * n2));
+  float glow = fillGlow * max(bar, tongue) * 0.55;
+  float heat = core + glow * 0.6;
 
-  // pulsing hotspot riding the leading edge (was the CSS ember dot)
-  vec2 hot = vec2(clamp(e, 0.02, 0.98) * aspect, 0.3);
-  float d = length(vec2(p.x - hot.x, (uv.y - hot.y) * 1.4));
+  // glowing ember riding the leading edge — tight core + soft bloom halo
+  vec2 hot = vec2(clamp(e, 0.02, 0.98) * aspect, 0.26);
   float pulse = 0.75 + 0.25 * sin(t * 4.5);
-  heat += exp(-d * d * 26.0) * pulse * step(0.015, u_progress);
+  float dCore = length(p - hot);
+  vec2 dGlow = vec2((p.x - hot.x) * 0.7, uv.y - hot.y);
+  float gate = step(0.015, u_progress);
+  heat += (exp(-dCore * dCore * 46.0) * 1.1 + exp(-dot(dGlow, dGlow) * 7.0) * 0.55) * pulse * gate;
 
-  // sparks drifting up off the fire near the edge
-  vec2 sp = vec2(p.x * 9.0, (uv.y - t * 0.55) * 9.0);
+  // embers drifting up off the fire, fading out before the top
+  vec2 sp = vec2(p.x * 7.0, (uv.y - t * 0.5) * 6.0);
   vec2 cell = floor(sp);
   float ch = hash(cell);
   vec2 cp = fract(sp) - 0.5;
-  float spark = smoothstep(0.14, 0.0, length(cp + vec2(sin(ch * 6.28 + t) * 0.18, 0.0)));
-  spark *= step(0.78, ch) * smoothstep(0.3, 0.05, abs(uv.x - e));
-  heat += spark * 0.7;
+  float spark = smoothstep(0.16, 0.0, length(cp + vec2(sin(ch * 6.28 + t * 1.3) * 0.22, 0.0)));
+  spark *= step(0.8, ch) * smoothstep(0.42, 0.0, abs(uv.x - e)) * smoothstep(1.05, 0.5, uv.y);
+  heat += spark * 0.85;
 #else
-  // chip: short licks filling the pill, hotter toward the bottom
-  float heat = fill * (0.5 + 0.55 * (1.0 - uv.y)) * (0.55 + 0.75 * n2);
-  heat += fill * smoothstep(0.55, 1.0, n) * uv.y * 0.4;
+  // chip: soft licks filling the pill, hotter toward the bottom, gentle glow bleed
+  float heat = fillCore * (0.55 + 0.5 * (1.0 - uv.y)) * (0.6 + 0.7 * n2);
+  heat += fillCore * smoothstep(0.5, 1.0, n) * uv.y * 0.5;
+  heat += fillGlow * 0.4 * (0.5 + 0.5 * n2);
 #endif
 
   vec3 c = fireRamp(heat);
-  float alpha = smoothstep(0.03, 0.28, heat);
+  float alpha = clamp(smoothstep(0.02, 0.22, heat), 0.0, 1.0);
 
   // paused: darker + desaturated
   float l = dot(c, vec3(0.299, 0.587, 0.114));
@@ -294,11 +301,12 @@ export default function FireCanvas({
         drawStatic();
         return;
       }
-      if (!unsub && !settled()) {
-        unsub = subscribeFire(tick);
-        drawStatic(); // rAF may be suspended (hidden tab) — never leave the canvas blank
-      }
-      if (!unsub) drawStatic(); // paused + settled: refresh the frozen frame
+      if (!unsub && !settled()) unsub = subscribeFire(tick);
+      // The shared ticker's rAF is fully suspended while the tab is hidden,
+      // so a subscribed-but-idle canvas would otherwise be stuck showing
+      // whichever frame happened to be on screen when it lost focus. Force
+      // an immediate repaint whenever nothing else is about to redraw us.
+      if (!unsub || document.hidden) drawStatic();
     }
     kickRef.current = kick;
 
@@ -347,16 +355,20 @@ export default function FireCanvas({
       reduceMq.removeEventListener?.("change", onReduceChange);
       canvas.removeEventListener("webglcontextlost", onLost);
       canvas.removeEventListener("webglcontextrestored", onRestored);
-      // free the context promptly — iOS Safari caps live WebGL contexts.
-      // Deferred so a StrictMode remount of the same canvas can cancel it.
+      // Free the context promptly on a real unmount — iOS Safari caps live
+      // WebGL contexts. A React StrictMode dev double-invoke tears down and
+      // immediately remounts the SAME canvas node (still connected to the
+      // DOM); calling getContext() again there returns the existing context,
+      // so losing it here would orphan the remount. Only lose it once the
+      // canvas has actually left the document.
       const ext = state?.gl.getExtension("WEBGL_lose_context");
       if (ext) {
         pendingLose.set(
           canvas,
           setTimeout(() => {
             pendingLose.delete(canvas);
-            ext.loseContext();
-          }, 0)
+            if (!canvas.isConnected) ext.loseContext();
+          }, 50)
         );
       }
       state = null;
