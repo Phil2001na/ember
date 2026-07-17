@@ -1,5 +1,23 @@
 # Ember — update log
 
+## 2026-07-17 19:50
+
+### Procedural WebGL fire for timers + horizontal chip fill + UX polish
+- Replaced the CSS/SVG flame strip with a real procedural fire: new
+  `FireCanvas` renders fbm-noise flames in a transparent WebGL canvas —
+  morphing tongues, flame-licked leading edge drawn by the shader at the
+  progress line, ember-palette color ramp. Chip + track variants (track adds
+  a pulsing leading-edge hotspot and drifting sparks).
+- Timer chips now fill **left→right** (was bottom-up) — consistent with the
+  step-card track and reading direction; fill advances continuously via
+  per-frame lerp instead of 1 Hz steps.
+- One shared rAF ticker (`lib/fireTicker.ts`) for all canvases; suspends on
+  hidden tab and when paused timers settle. Reduced-motion → single static
+  frame. WebGL context loss handled; no-WebGL fallback keeps the old CSS
+  flames. DPR capped, `low-power` context, no new dependencies.
+- UX polish: chip icon buttons get a ~42px hit area (Fitts's law) and wider
+  gap; `aria-live` announcement when a timer finishes; `.sr-only` utility.
+
 ## 2026-07-15 22:40
 
 ### Timer chips: activity labels + fire fill animation

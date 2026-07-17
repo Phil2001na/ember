@@ -1,7 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
-import FlameStrip from "@/components/FlameStrip";
+import FireCanvas from "@/components/FireCanvas";
 import type { CookTimer } from "@/lib/useCookTimers";
 
 export default function StepTimer({
@@ -70,10 +70,7 @@ export default function StepTimer({
       {timer && !finished && (
         <div className="fire-track-wrap">
           <div className="fire-track">
-            <div className={`fire-track-fill ${running ? "" : "paused"}`} style={{ width: `${progress * 100}%` }}>
-              <FlameStrip paused={!running} className="fire-track-flames" />
-              <span className="fire-track-ember" />
-            </div>
+            <FireCanvas progress={progress} running={running} variant="track" />
           </div>
         </div>
       )}

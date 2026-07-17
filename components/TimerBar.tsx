@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Pause, Play, X } from "lucide-react";
-import FlameStrip from "@/components/FlameStrip";
+import FireCanvas from "@/components/FireCanvas";
 import type { CookTimer } from "@/lib/useCookTimers";
 
 export default function TimerBar({
@@ -19,8 +19,13 @@ export default function TimerBar({
 }) {
   if (!timers.length) return null;
 
+  const doneLabels = timers.filter((t) => t.finished).map((t) => t.label);
+
   return (
     <div className="timer-bar-wrap">
+      <span className="sr-only" role="status" aria-live="polite">
+        {doneLabels.length ? `Timer done: ${doneLabels.join(", ")}` : ""}
+      </span>
       <div className="timer-bar">
         {timers.map((t) => {
           const mm = Math.floor(t.remainingSec / 60);
@@ -33,8 +38,8 @@ export default function TimerBar({
               className={`timer-chip ${t.finished ? "timer-chip-done" : t.running ? "timer-chip-running" : "timer-chip-paused"}`}
             >
               {!t.finished && (
-                <div className="timer-chip-fire" style={{ height: `${10 + progress * 82}%` }}>
-                  <FlameStrip paused={!t.running} className="timer-chip-flames" />
+                <div className="timer-chip-fire">
+                  <FireCanvas progress={progress} running={t.running} variant="chip" />
                 </div>
               )}
               <button
