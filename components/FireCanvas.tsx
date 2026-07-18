@@ -87,16 +87,20 @@ void main() {
 
 #ifdef TRACK
   // gauge: a solid molten bar with a shimmering surface and a short flame
-  // fringe hugging its top — contained, not a wildfire
+  // fringe hugging its top — contained, not a wildfire. Temperature tracks
+  // progress: a deep smoldering ember early, ramping to white-hot near done.
+  float stage = smoothstep(0.0, 0.9, u_progress);
+  float temp = mix(0.5, 1.0, stage * stage);
+
   float bar = smoothstep(0.58, 0.30, uv.y);
-  float fringe = smoothstep(0.35, 0.8, n - (uv.y - 0.42) * 1.7) * smoothstep(0.82, 0.45, uv.y) * 0.6;
+  float fringe = smoothstep(0.35, 0.8, n - (uv.y - 0.42) * 1.7) * smoothstep(0.82, 0.45, uv.y) * (0.25 + 0.45 * stage);
   float core = fillCore * max(bar * (0.9 + 0.25 * n2), fringe * (0.5 + 0.4 * n2));
   float glow = fillGlow * bar * 0.45;
-  float heat = core + glow * 0.6;
+  float heat = (core + glow * 0.6) * temp;
 
   // glowing ember riding the leading edge — tight core + soft bloom halo
   vec2 hot = vec2(clamp(e, 0.02, 0.98) * aspect, 0.4);
-  float pulse = 0.8 + 0.2 * sin(t * 4.5);
+  float pulse = (0.8 + 0.2 * sin(t * 4.5)) * mix(0.65, 1.0, stage);
   float dCore = length(p - hot);
   vec2 dGlow = vec2((p.x - hot.x) * 0.7, uv.y - hot.y);
   float gate = step(0.015, u_progress);

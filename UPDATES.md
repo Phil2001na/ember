@@ -2,6 +2,33 @@
 
 ## 2026-07-18
 
+### Gauge heats up with progress
+- `FireCanvas` track shader: heat now scales with `u_progress` — the bar
+  smolders a deep ember orange early and ramps to the full white-hot molten
+  look toward the finish. Flame fringe and the leading-edge ember pulse grow
+  with it.
+
+### Mid-cook chat can now set real timers
+- Added a `start_timer` tool to `/api/cook` with a prompt rule: whenever Ember
+  tells the user to do something for a specific duration, it starts a countdown
+  instead of just saying "(for 4 minutes)".
+- `CookClient` applies the tool client-side (same pattern as `amend_recipe`),
+  starting the timer on the current step via `useCookTimers` — it shows in the
+  TimerBar, vibrates/notifies on finish, and replaces any timer already on
+  that step (right for "give it 2 more minutes").
+- KNOWN LIMITATION (watch for wonkiness): timers are keyed by step index, so a
+  chat timer replaces the current step's own running timer. Concurrent timers
+  across different steps are fine; the bad case is asking Ember to time
+  something unrelated while standing on a step whose timer is running — it
+  clobbers it. If this bites in real cooking, the fix is giving chat timers
+  their own key + jump-target step in `useCookTimers`/`TimerBar`.
+
+### Play Store deployment plan
+- Wrote `PLAY_STORE_PLAN.md`: TWA/Bubblewrap route from current PWA state to
+  Google Play production, phased around paying the $25 Console fee at month
+  end and the 14-day/12-tester closed-testing requirement for new personal
+  accounts (realistic production: mid–late August).
+
 ### Switched brain back to Claude + Anthropic prompt caching
 - Removed the `BRAIN=gemini` stopgap from `.env.local` (Anthropic credits
   topped up) — `brain` is `claude-sonnet-5` again. The same env var still
