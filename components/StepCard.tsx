@@ -43,7 +43,7 @@ export default function StepCard({
   return (
     <div
       className="card step-card"
-      style={{ borderColor: finished ? "var(--green-ok)" : running ? "var(--ember-500)" : "var(--border)" }}
+      style={{ borderColor: finished ? "var(--blue-flame)" : running ? "var(--ember-500)" : "var(--border)" }}
     >
       <div className="step-card-label">
         <CookingPot size={15} /> Active step
@@ -55,7 +55,7 @@ export default function StepCard({
           {hasTimer && (
             <p className="step-card-remaining">
               {finished ? (
-                <span style={{ color: "var(--green-ok)", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <span style={{ color: "var(--blue-flame)", display: "inline-flex", alignItems: "center", gap: 6 }}>
                   Done! <Check size={20} />
                 </span>
               ) : (
@@ -69,13 +69,13 @@ export default function StepCard({
         {step.heat && <HeatDial heat={step.heat} label={HEAT_LABEL[step.heat]} active={running} />}
       </div>
 
-      {hasTimer && !finished && (
+      {hasTimer && (
         <>
           <div className="step-card-rule" />
           <span className="step-card-sublabel">Progress</span>
           <div className="fire-track-wrap">
             <div className="fire-track">
-              <FireCanvas progress={progress} running={running} variant="track" />
+              <FireCanvas progress={finished ? 1 : progress} running={running || finished} variant="track" />
             </div>
           </div>
         </>

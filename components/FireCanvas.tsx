@@ -34,6 +34,14 @@ const vec3 C_AMBER4 = vec3(0.961, 0.725, 0.259);
 const vec3 C_AMBER3 = vec3(1.0, 0.824, 0.478);
 const vec3 C_CORE   = vec3(1.0, 0.957, 0.902);
 
+// gas-stove blue — same ramp stops as the fire palette
+const vec3 B_DEEP  = vec3(0.043, 0.11, 0.42);
+const vec3 B_BLUE5 = vec3(0.078, 0.25, 0.75);
+const vec3 B_BLUE4 = vec3(0.16, 0.42, 0.95);
+const vec3 B_SKY   = vec3(0.36, 0.65, 1.0);
+const vec3 B_CYAN  = vec3(0.62, 0.87, 1.0);
+const vec3 B_CORE  = vec3(0.93, 0.98, 1.0);
+
 float hash(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
 }
@@ -65,6 +73,16 @@ vec3 fireRamp(float h) {
   c = mix(c, C_AMBER4, smoothstep(0.46, 0.68, h));
   c = mix(c, C_AMBER3, smoothstep(0.62, 0.85, h));
   c = mix(c, C_CORE, smoothstep(0.8, 1.05, h));
+  return c;
+}
+
+vec3 blueRamp(float h) {
+  vec3 c = mix(B_DEEP * 0.6, B_DEEP, smoothstep(0.0, 0.18, h));
+  c = mix(c, B_BLUE5, smoothstep(0.15, 0.35, h));
+  c = mix(c, B_BLUE4, smoothstep(0.32, 0.5, h));
+  c = mix(c, B_SKY, smoothstep(0.46, 0.68, h));
+  c = mix(c, B_CYAN, smoothstep(0.62, 0.85, h));
+  c = mix(c, B_CORE, smoothstep(0.8, 1.05, h));
   return c;
 }
 
@@ -112,7 +130,10 @@ void main() {
   heat += fillGlow * 0.4 * (0.5 + 0.5 * n2);
 #endif
 
-  vec3 c = fireRamp(heat);
+  // the flame runs cleaner as the timer burns down — orange gradually gives
+  // way to gas-stove blue, fully blue at done
+  float clean = smoothstep(0.55, 1.0, u_progress);
+  vec3 c = mix(fireRamp(heat), blueRamp(heat), clean);
   float alpha = clamp(smoothstep(0.02, 0.22, heat), 0.0, 1.0);
 
   // paused: darker + desaturated

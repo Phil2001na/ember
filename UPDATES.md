@@ -2,6 +2,15 @@
 
 ## 2026-07-18
 
+### 23:57 — Flame turns gas-stove blue as timers finish
+- `FireCanvas` shader: added a blue color ramp mirroring the fire palette;
+  the flame blends from orange to gas-stove blue gradually from ~55% progress,
+  fully blue at done (both chip and track variants).
+- Finished timers now keep their flame (blue, still animated) instead of
+  hiding it — timer chips and the step-card track.
+- Done-state accents (chip tint/pulse, step-card border, "Done!" text) moved
+  from green to a matching `--blue-flame`.
+
 ### Gauge heats up with progress
 - `FireCanvas` track shader: heat now scales with `u_progress` — the bar
   smolders a deep ember orange early and ramps to the full white-hot molten

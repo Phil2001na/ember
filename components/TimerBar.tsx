@@ -37,11 +37,9 @@ export default function TimerBar({
               key={t.stepIdx}
               className={`timer-chip ${t.finished ? "timer-chip-done" : t.running ? "timer-chip-running" : "timer-chip-paused"}`}
             >
-              {!t.finished && (
-                <div className="timer-chip-fire">
-                  <FireCanvas progress={progress} running={t.running} variant="chip" />
-                </div>
-              )}
+              <div className="timer-chip-fire">
+                <FireCanvas progress={t.finished ? 1 : progress} running={t.running || t.finished} variant="chip" />
+              </div>
               <button
                 className="timer-chip-main"
                 onClick={() => onJump(t.stepIdx)}
