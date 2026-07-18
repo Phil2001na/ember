@@ -2,6 +2,17 @@
 
 ## 2026-07-18
 
+### Switched brain back to Claude + Anthropic prompt caching
+- Removed the `BRAIN=gemini` stopgap from `.env.local` (Anthropic credits
+  topped up) — `brain` is `claude-sonnet-5` again. The same env var still
+  needs removing in Vercel for prod.
+- Added Anthropic prompt caching to `/api/cook` and `/api/kitchen-chat`:
+  system prompt moved to the AI SDK v7 `instructions` array with a
+  `cacheControl` breakpoint on the stable block, plus a breakpoint on the
+  last history message so each turn reads prior turns from cache. The
+  volatile "currently on step N" line sits in its own uncached system
+  message. Verified live: 2nd call read 6,642 tokens from cache (2 uncached).
+
 ### Cook-step card feedback pass
 - Swapped "Step details" and "Watch for": the step's explanation now sits
   inside the active-step card (next to the timer controls) and the watch-for

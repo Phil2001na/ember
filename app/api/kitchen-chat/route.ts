@@ -23,9 +23,26 @@ export async function POST(request: Request) {
 
   const { messages }: { messages: UIMessage[] } = await request.json();
 
+  // Anthropic prompt caching: breakpoint on the system block, plus one on the last
+  // history message so each turn reads prior turns from cache. The kitchen prompt
+  // changes when the pantry tools fire, which just rewrites the cache — fine.
+  // Gemini ignores the providerOptions.
+  const cacheBreakpoint = {
+    anthropic: { cacheControl: { type: "ephemeral" as const } },
+  };
+
+  const history = await convertToModelMessages(messages);
+  if (history.length > 0) {
+    history[history.length - 1].providerOptions = cacheBreakpoint;
+  }
+
   const result = streamText({
     model: brain,
-    system: `You are Ember, a warm and practical cooking companion having a casual chat
+    instructions: [
+      {
+        role: "system",
+        providerOptions: cacheBreakpoint,
+        content: `You are Ember, a warm and practical cooking companion having a casual chat
 with someone deciding what to cook. Keep replies short — 1-3 spoken sentences, no
 markdown. The dish cards carry the details, so don't restate ingredients or steps
 in prose.
@@ -56,7 +73,9 @@ those — include a short reason like "for lasagna" when it comes from a dish.
 Never add something that's already in their pantry. When they say they BOUGHT
 something, that goes to update_pantry as an add AND update_shopping_list as a
 remove if it was on the list.`,
-    messages: await convertToModelMessages(messages),
+      },
+    ],
+    messages: history,
     tools: {
       suggest_dishes: tool({
         description:
