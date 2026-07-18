@@ -12,6 +12,7 @@ import {
   Check,
   ChevronRight,
   CircleCheck,
+  Eye,
   Flame,
   Home,
   MessageCircle,
@@ -362,10 +363,12 @@ export default function CookClient({
           onReset={cookTimers.reset}
         />
 
-        {step.detail && (
-          <div className="step-details">
-            <span className="badge badge-outline step-details-badge">Step details</span>
-            <p className="step-details-text">{step.detail}</p>
+        {step.watch_for && (
+          <div className="step-watch">
+            <span className="badge badge-outline step-watch-badge">
+              <Eye size={13} /> Watch for
+            </span>
+            <p className="step-watch-text">{step.watch_for}</p>
           </div>
         )}
       </div>

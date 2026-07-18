@@ -79,35 +79,28 @@ void main() {
   float n2 = fbm(p * 5.5 + vec2(-t * 0.4, -t * 1.7));
 
   // flame-licked leading edge at the progress line — two widths: a soft
-  // core ramp and a wider one that bleeds out into a glow halo
-  float e = u_progress * 1.05 - 0.02 + (n - 0.5) * 0.14 * (0.5 + 0.5 * uv.y);
+  // core ramp and a wider one that bleeds out into a glow halo. LICK is
+  // per-variant: the track reads as a gauge, so its edge stays tight.
+  float e = u_progress * 1.05 - 0.02 + (n - 0.5) * LICK * (0.5 + 0.5 * uv.y);
   float fillCore = smoothstep(e + 0.05, e - 0.09, uv.x);
   float fillGlow = smoothstep(e + 0.16, e - 0.22, uv.x);
 
 #ifdef TRACK
-  // soft-topped burning bar low, tall wisping tongues fading out above it
-  float bar = smoothstep(0.42, 0.18, uv.y);
-  float tongue = smoothstep(0.15, 0.85, n * 1.1 - (uv.y - 0.26) * 0.8) * smoothstep(1.0, 0.5, uv.y);
-  float core = fillCore * max(bar * (0.8 + 0.4 * n2), tongue * (0.55 + 0.6 * n2));
-  float glow = fillGlow * max(bar, tongue) * 0.55;
+  // gauge: a solid molten bar with a shimmering surface and a short flame
+  // fringe hugging its top — contained, not a wildfire
+  float bar = smoothstep(0.58, 0.30, uv.y);
+  float fringe = smoothstep(0.35, 0.8, n - (uv.y - 0.42) * 1.7) * smoothstep(0.82, 0.45, uv.y) * 0.6;
+  float core = fillCore * max(bar * (0.9 + 0.25 * n2), fringe * (0.5 + 0.4 * n2));
+  float glow = fillGlow * bar * 0.45;
   float heat = core + glow * 0.6;
 
   // glowing ember riding the leading edge — tight core + soft bloom halo
-  vec2 hot = vec2(clamp(e, 0.02, 0.98) * aspect, 0.26);
-  float pulse = 0.75 + 0.25 * sin(t * 4.5);
+  vec2 hot = vec2(clamp(e, 0.02, 0.98) * aspect, 0.4);
+  float pulse = 0.8 + 0.2 * sin(t * 4.5);
   float dCore = length(p - hot);
   vec2 dGlow = vec2((p.x - hot.x) * 0.7, uv.y - hot.y);
   float gate = step(0.015, u_progress);
-  heat += (exp(-dCore * dCore * 46.0) * 1.1 + exp(-dot(dGlow, dGlow) * 7.0) * 0.55) * pulse * gate;
-
-  // embers drifting up off the fire, fading out before the top
-  vec2 sp = vec2(p.x * 7.0, (uv.y - t * 0.5) * 6.0);
-  vec2 cell = floor(sp);
-  float ch = hash(cell);
-  vec2 cp = fract(sp) - 0.5;
-  float spark = smoothstep(0.16, 0.0, length(cp + vec2(sin(ch * 6.28 + t * 1.3) * 0.22, 0.0)));
-  spark *= step(0.8, ch) * smoothstep(0.42, 0.0, abs(uv.x - e)) * smoothstep(1.05, 0.5, uv.y);
-  heat += spark * 0.85;
+  heat += (exp(-dCore * dCore * 60.0) * 1.0 + exp(-dot(dGlow, dGlow) * 10.0) * 0.4) * pulse * gate;
 #else
   // chip: soft licks filling the pill, hotter toward the bottom, gentle glow bleed
   float heat = fillCore * (0.55 + 0.5 * (1.0 - uv.y)) * (0.6 + 0.7 * n2);
@@ -151,7 +144,9 @@ function initGL(canvas: HTMLCanvasElement, variant: "chip" | "track"): GLState |
   if (!gl) return null;
 
   const frag =
-    (variant === "track" ? "#define OCTAVES 3\n#define TRACK\n" : "#define OCTAVES 2\n") +
+    (variant === "track"
+      ? "#define OCTAVES 3\n#define TRACK\n#define LICK 0.05\n"
+      : "#define OCTAVES 2\n#define LICK 0.14\n") +
     FRAG_BODY;
 
   function compile(type: number, src: string): WebGLShader | null {

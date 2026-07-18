@@ -413,7 +413,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
 }
 .fire-track {
   position: relative;
-  height: 58px;
+  height: 34px;
 }
 .fire-track::after {
   content: "";
@@ -421,18 +421,10 @@ input, textarea, select { font: inherit; font-size: 16px; }
   left: 0;
   right: 0;
   bottom: 0;
-  height: 8px;
+  height: 12px;
   border-radius: 999px;
   background: var(--surface-3);
   z-index: -1;
-}
-.fire-track-scale {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 6px;
-  font-size: 0.72rem;
-  color: var(--text-faint);
-  font-variant-numeric: tabular-nums;
 }
 
 /* active-step card: instruction + heat dial + fire progress + watch-for + controls,
@@ -471,8 +463,8 @@ input, textarea, select { font: inherit; font-size: 16px; }
 .step-card-rule { height: 1px; background: var(--border); margin: 16px 0; }
 .step-card-sublabel { font-size: 0.82rem; color: var(--text-dim); }
 .step-card-bottom { display: flex; align-items: flex-start; gap: 16px; }
-.step-card-watch { flex: 1; min-width: 0; }
-.step-card-watch-title {
+.step-card-detail { flex: 1; min-width: 0; }
+.step-card-detail-title {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -481,14 +473,13 @@ input, textarea, select { font: inherit; font-size: 16px; }
   color: var(--amber-300);
   margin-bottom: 5px;
 }
-.step-card-watch p { font-size: 0.88rem; color: var(--text-dim); line-height: 1.5; }
+.step-card-detail p { font-size: 0.9rem; color: var(--text-dim); line-height: 1.55; }
 .step-card-controls { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; margin-left: auto; }
 .step-card-controls .btn { width: 100%; white-space: nowrap; }
 
-.step-details { margin-top: 22px; }
-.step-details-badge { margin-bottom: 12px; }
-.step-details-text { color: var(--text-dim); font-size: 1rem; line-height: 1.65; }
-.step-details-text::first-line { font-family: var(--font-display); font-weight: 600; font-size: 1.2em; color: var(--text); }
+.step-watch { margin-top: 22px; }
+.step-watch-badge { margin-bottom: 12px; display: inline-flex; align-items: center; gap: 6px; color: var(--amber-300); }
+.step-watch-text { color: var(--text-dim); font-size: 1rem; line-height: 1.65; }
 
 /* circular heat gauge */
 .heat-dial {

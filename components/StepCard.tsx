@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CookingPot, Eye } from "lucide-react";
+import { Check, CookingPot, NotebookText } from "lucide-react";
 import FireCanvas from "@/components/FireCanvas";
 import HeatDial from "@/components/HeatDial";
 import type { RecipeStep } from "@/lib/schemas";
@@ -38,7 +38,7 @@ export default function StepCard({
   const progress = timer && total > 0 ? 1 - remaining / total : 0;
   const mm = Math.floor(remaining / 60);
   const ss = String(remaining % 60).padStart(2, "0");
-  const showBottom = !!step.watch_for || (hasTimer && !finished);
+  const showBottom = !!step.detail || (hasTimer && !finished);
 
   return (
     <div
@@ -78,11 +78,6 @@ export default function StepCard({
               <FireCanvas progress={progress} running={running} variant="track" />
             </div>
           </div>
-          <div className="fire-track-scale">
-            <span>0%</span>
-            <span>50%</span>
-            <span>100%</span>
-          </div>
         </>
       )}
 
@@ -90,12 +85,12 @@ export default function StepCard({
         <>
           <div className="step-card-rule" />
           <div className="step-card-bottom">
-            {step.watch_for && (
-              <div className="step-card-watch">
-                <div className="step-card-watch-title">
-                  <Eye size={15} /> Watch for
+            {step.detail && (
+              <div className="step-card-detail">
+                <div className="step-card-detail-title">
+                  <NotebookText size={15} /> Step details
                 </div>
-                <p>{step.watch_for}</p>
+                <p>{step.detail}</p>
               </div>
             )}
             {hasTimer && !finished && (

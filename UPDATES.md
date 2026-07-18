@@ -2,6 +2,15 @@
 
 ## 2026-07-18
 
+### Cook-step card feedback pass
+- Swapped "Step details" and "Watch for": the step's explanation now sits
+  inside the active-step card (next to the timer controls) and the watch-for
+  cue moved to its own section below the card.
+- Removed the 0/50/100% scale under the fire progress bar.
+- Tamed the track fire into a gauge: solid molten bar with a short flame
+  fringe and a tighter leading edge (was tall wildfire tongues + drifting
+  sparks); track height 58px → 34px. Timer chip fire unchanged.
+
 ### Redesigned the cook-step screen around a single "active step" card
 - Merged the instruction heading, heat level, countdown, fire progress bar,
   "watch for" cue, and Pause/Reset controls into one `StepCard` component
