@@ -1,5 +1,12 @@
 # Ember — update log
 
+## 2026-07-19
+
+### 00:23 — Gauge surface smolders
+- Track shader: the bar's top edge is now perturbed by the flame noise
+  (subtle wobble) so the molten surface reads ragged/smoldering instead of
+  ruler-straight.
+
 ## 2026-07-18
 
 ### 23:57 — Flame turns gas-stove blue as timers finish

@@ -110,7 +110,10 @@ void main() {
   float stage = smoothstep(0.0, 0.9, u_progress);
   float temp = mix(0.5, 1.0, stage * stage);
 
-  float bar = smoothstep(0.58, 0.30, uv.y);
+  // ragged, smoldering surface line — the noise crawls the top edge a touch
+  // so the bar doesn't read as ruler-straight
+  float wob = (n - 0.5) * 0.08 + (n2 - 0.5) * 0.05;
+  float bar = smoothstep(0.58 + wob, 0.30 + wob, uv.y);
   float fringe = smoothstep(0.35, 0.8, n - (uv.y - 0.42) * 1.7) * smoothstep(0.82, 0.45, uv.y) * (0.25 + 0.45 * stage);
   float core = fillCore * max(bar * (0.9 + 0.25 * n2), fringe * (0.5 + 0.4 * n2));
   float glow = fillGlow * bar * 0.45;
