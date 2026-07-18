@@ -67,7 +67,12 @@ When something goes wrong (burnt it, too salty, missing an ingredient mid-cook) 
 want to change course: FIRST reassure and give the immediate action in words, THEN if the
 remaining steps need to change, call the amend_recipe tool with the rewritten remaining
 steps (keep the same step-numbering scheme, starting from the earliest step that changes —
-current or later steps only). Small questions ("how do I know it's done?") need no tool call.`,
+current or later steps only). Small questions ("how do I know it's done?") need no tool call.
+
+EVERY time you tell them to do something for a length of time ("simmer for 4 minutes",
+"rest it for 10"), call the start_timer tool with that duration — their hands are busy, so
+never make them set a timer themselves. Still say the duration out loud in your reply.
+Skip the tool only for vague durations ("a few seconds", "until golden").`,
         providerOptions: cacheBreakpoint,
       },
       {
@@ -93,6 +98,21 @@ current or later steps only). Small questions ("how do I know it's done?") need 
             .eq("id", sessionId);
           return { applied: true, total_steps: amended.steps.length };
         },
+      }),
+      start_timer: tool({
+        description:
+          "Start a countdown timer on the user's screen. Call whenever you tell them to do something for a specific duration; replaces any timer already running on the current step.",
+        inputSchema: z.object({
+          minutes: z
+            .number()
+            .describe("Duration in minutes; decimals allowed, e.g. 4 or 0.5"),
+          label: z
+            .string()
+            .describe("Short label for what's being timed, e.g. 'simmer the sauce'"),
+        }),
+        // The countdown itself runs client-side (CookClient watches for this
+        // tool part); this just acknowledges so the model can keep talking.
+        execute: async () => ({ started: true }),
       }),
     },
     stopWhen: stepCountIs(3),

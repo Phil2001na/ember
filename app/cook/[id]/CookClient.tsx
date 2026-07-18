@@ -89,26 +89,35 @@ export default function CookClient({
     };
   }, []);
 
-  // apply recipe amendments arriving via the amend_recipe tool
+  // apply tool calls arriving in the chat stream (recipe amendments, timers)
+  const startTimer = cookTimers.start;
   useEffect(() => {
     for (const m of messages) {
       for (const part of m.parts) {
         if (
-          part.type === "tool-amend_recipe" &&
-          "input" in part &&
-          part.input &&
-          !appliedTools.current.has(part.toolCallId) &&
-          (part.state === "output-available" || part.state === "input-available")
-        ) {
+          !("toolCallId" in part) ||
+          !("input" in part) ||
+          !part.input ||
+          appliedTools.current.has(part.toolCallId) ||
+          (part.state !== "output-available" && part.state !== "input-available")
+        )
+          continue;
+        if (part.type === "tool-amend_recipe") {
           appliedTools.current.add(part.toolCallId);
           const input = part.input as { remaining_steps: RecipeStep[] };
           if (input.remaining_steps?.length) {
             setRecipe((r) => applyAmendment(r, input.remaining_steps));
           }
+        } else if (part.type === "tool-start_timer") {
+          appliedTools.current.add(part.toolCallId);
+          const input = part.input as { minutes: number; label: string };
+          if (input.minutes > 0) {
+            startTimer(stepRef.current, input.minutes, input.label);
+          }
         }
       }
     }
-  }, [messages]);
+  }, [messages, startTimer]);
 
   // speak finished replies aloud when voice mode is on
   useEffect(() => {
