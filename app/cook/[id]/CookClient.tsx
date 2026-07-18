@@ -14,7 +14,6 @@ import {
   CircleCheck,
   Flame,
   Home,
-  Lightbulb,
   MessageCircle,
   ShoppingBasket,
   Volume2,
@@ -23,20 +22,11 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { applyAmendment } from "@/lib/recipe";
 import type { Recipe, RecipeStep } from "@/lib/schemas";
-import StepTimer from "@/components/StepTimer";
+import StepCard from "@/components/StepCard";
 import TimerBar from "@/components/TimerBar";
 import ChatDrawer from "@/components/ChatDrawer";
 import PushToTalk from "@/components/PushToTalk";
 import { useCookTimers } from "@/lib/useCookTimers";
-
-const HEAT_LABEL: Record<string, string> = {
-  off: "heat off",
-  low: "low heat",
-  "medium-low": "medium-low",
-  medium: "medium heat",
-  "medium-high": "medium-high",
-  high: "high heat",
-};
 
 export default function CookClient({
   sessionId,
@@ -363,39 +353,20 @@ export default function CookClient({
 
       {/* the step */}
       <div className="fade-in" key={`${stepIdx}-${step.instruction.slice(0, 24)}`} style={{ flex: 1 }}>
-        {step.heat && (
-          <span className={`badge ${step.heat === "high" || step.heat === "medium-high" ? "badge-warn" : "badge-accent"}`} style={{ marginBottom: 12 }}>
-            <Flame /> {HEAT_LABEL[step.heat]}
-          </span>
-        )}
-        <h2 style={{ fontSize: "1.9rem", lineHeight: 1.18, margin: "10px 0 16px" }}>
-          {step.instruction}
-        </h2>
-        <p style={{ color: "var(--text-dim)", fontSize: "1.02rem", lineHeight: 1.65, marginBottom: 18 }}>{step.detail}</p>
+        <StepCard
+          stepIdx={stepIdx}
+          step={step}
+          timer={cookTimers.timers.find((t) => t.stepIdx === stepIdx)}
+          onStart={cookTimers.start}
+          onToggle={cookTimers.toggle}
+          onReset={cookTimers.reset}
+        />
 
-        {step.watch_for && (
-          <div
-            className="card"
-            style={{ borderColor: "rgba(245, 185, 66, 0.45)", background: "rgba(245,185,66,0.05)", borderRadius: "var(--radius-lg)", marginBottom: 16 }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 6 }}>
-              <Lightbulb size={18} style={{ color: "var(--amber-300)" }} />
-              <span style={{ fontSize: "0.95rem", fontWeight: 600 }}>Watch for</span>
-            </div>
-            <p style={{ fontSize: "0.94rem", color: "var(--text-dim)", lineHeight: 1.55 }}>{step.watch_for}</p>
+        {step.detail && (
+          <div className="step-details">
+            <span className="badge badge-outline step-details-badge">Step details</span>
+            <p className="step-details-text">{step.detail}</p>
           </div>
-        )}
-
-        {step.timer_min && (
-          <StepTimer
-            stepIdx={stepIdx}
-            minutes={step.timer_min}
-            label={step.instruction}
-            timer={cookTimers.timers.find((t) => t.stepIdx === stepIdx)}
-            onStart={cookTimers.start}
-            onToggle={cookTimers.toggle}
-            onReset={cookTimers.reset}
-          />
         )}
       </div>
 

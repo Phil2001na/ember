@@ -1,5 +1,25 @@
 # Ember — update log
 
+## 2026-07-18
+
+### Redesigned the cook-step screen around a single "active step" card
+- Merged the instruction heading, heat level, countdown, fire progress bar,
+  "watch for" cue, and Pause/Reset controls into one `StepCard` component
+  (replaces `StepTimer`) — matches the concept art and makes better use of
+  screen space instead of stacking separate cards/badges down the page.
+- New `HeatDial`: a circular SVG gauge (replaces the small heat pill) with a
+  glowing arc that pulses gently while a timer is running.
+- The step's longer explanation now lives in its own "Step details" section
+  below the card, with a CSS `::first-line` treatment (serif, larger) so the
+  opening reads like a mini heading without adding new schema fields.
+- Fixed stale fire canvas on backgrounded tabs: the shared rAF ticker fully
+  suspends while a tab is hidden, but `FireCanvas` was only repainting when
+  first subscribing — a timer's progress could advance for minutes with the
+  canvas frozen on its mount-time frame. Now redraws immediately whenever the
+  tab is hidden. Also softened/brightened the fire shader (wider glow halo,
+  brighter color ramp, taller track) to better match the intended warm,
+  glowing look instead of the harsher jagged edge from the first pass.
+
 ## 2026-07-17 19:50
 
 ### Procedural WebGL fire for timers + horizontal chip fill + UX polish
