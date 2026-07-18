@@ -132,7 +132,7 @@ void main() {
 
   // the flame runs cleaner as the timer burns down — orange gradually gives
   // way to gas-stove blue, fully blue at done
-  float clean = smoothstep(0.55, 1.0, u_progress);
+  float clean = smoothstep(0.8, 1.0, u_progress);
   vec3 c = mix(fireRamp(heat), blueRamp(heat), clean);
   float alpha = clamp(smoothstep(0.02, 0.22, heat), 0.0, 1.0);
 
