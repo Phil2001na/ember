@@ -149,7 +149,13 @@ export const RecipeStepSchema = z.object({
   heat: z
     .enum(["off", "low", "medium-low", "medium", "medium-high", "high"])
     .nullable()
-    .describe("Stove/oven heat during this step, null if no heat involved"),
+    .describe("Stovetop heat during this step, null if no stovetop heat involved"),
+  oven_temp_c: z
+    .number()
+    .nullable()
+    .describe(
+      "Oven temperature in °C when the oven is used this step (e.g. 180) — note fan/no-fan in detail. Null if no oven involved"
+    ),
   duration_min: z
     .number()
     .nullable()
@@ -255,5 +261,7 @@ export const EQUIPMENT_OPTIONS = [
   "slow cooker",
   "rice cooker",
   "hand mixer",
+  "kitchen scale",
+  "baking tins & trays",
   "pots & pans",
 ] as const;

@@ -41,11 +41,28 @@ function notifyTimerDone(stepIdx: number, label: string) {
 }
 
 // Shared timer state for a cook session, keyed by step index, so timers
-// survive step navigation and several can run concurrently.
-export function useCookTimers() {
-  const [timers, setTimers] = useState<Record<number, StoredTimer>>({});
+// survive step navigation and several can run concurrently. When a storageKey
+// is given, timers also survive a reload — long waits (proofing, baking) mean
+// people leave and come back.
+export function useCookTimers(storageKey?: string) {
+  const [timers, setTimers] = useState<Record<number, StoredTimer>>(() => {
+    if (!storageKey || typeof window === "undefined") return {};
+    try {
+      return JSON.parse(localStorage.getItem(storageKey) ?? "{}");
+    } catch {
+      return {};
+    }
+  });
   const [now, setNow] = useState(() => Date.now());
   const notifiedRef = useRef<Set<number>>(new Set());
+
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      if (Object.keys(timers).length === 0) localStorage.removeItem(storageKey);
+      else localStorage.setItem(storageKey, JSON.stringify(timers));
+    } catch {}
+  }, [timers, storageKey]);
 
   const anyRunning = Object.values(timers).some((t) => t.running);
 

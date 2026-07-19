@@ -1,6 +1,6 @@
 "use client";
 
-import { Flame } from "lucide-react";
+import { Flame, Thermometer } from "lucide-react";
 import type { RecipeStep } from "@/lib/schemas";
 
 const LEVELS: NonNullable<RecipeStep["heat"]>[] = [
@@ -12,17 +12,26 @@ const LEVELS: NonNullable<RecipeStep["heat"]>[] = [
   "high",
 ];
 
+// Domestic ovens top out around 250°C — used to scale the arc for oven steps.
+const OVEN_MAX_C = 250;
+
 export default function HeatDial({
   heat,
+  tempC,
   label,
   active,
 }: {
-  heat: NonNullable<RecipeStep["heat"]>;
+  heat?: NonNullable<RecipeStep["heat"]>;
+  tempC?: number;
   label: string;
   active: boolean;
 }) {
-  const fraction = LEVELS.indexOf(heat) / (LEVELS.length - 1);
-  const warm = heat === "high" || heat === "medium-high";
+  const oven = tempC != null;
+  const fraction = oven
+    ? Math.min(1, Math.max(0, tempC / OVEN_MAX_C))
+    : LEVELS.indexOf(heat ?? "off") / (LEVELS.length - 1);
+  const warm = oven ? tempC >= 180 : heat === "high" || heat === "medium-high";
+  const Icon = oven ? Thermometer : Flame;
   const r = 42;
   const c = 2 * Math.PI * r;
 
@@ -43,7 +52,7 @@ export default function HeatDial({
           style={{ stroke: warm ? "var(--ember-500)" : "var(--amber-400)" }}
         />
       </svg>
-      <Flame size={22} className="heat-dial-flame" style={{ color: warm ? "var(--ember-400)" : "var(--amber-300)" }} />
+      <Icon size={22} className="heat-dial-flame" style={{ color: warm ? "var(--ember-400)" : "var(--amber-300)" }} />
       <span className="heat-dial-label" style={{ color: warm ? "var(--ember-300)" : "var(--amber-300)" }}>
         {label}
       </span>

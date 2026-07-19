@@ -62,7 +62,7 @@ export default function CookClient({
   const appliedTools = useRef<Set<string>>(new Set());
   const stepRef = useRef(stepIdx);
   stepRef.current = stepIdx;
-  const cookTimers = useCookTimers();
+  const cookTimers = useCookTimers(`ember-timers-${sessionId}`);
 
   const { messages, sendMessage, status } = useChat({
     messages: initialMessages,
@@ -166,6 +166,9 @@ export default function CookClient({
   async function finish() {
     setDone(true);
     setUsedUpChecking(true);
+    try {
+      localStorage.removeItem(`ember-timers-${sessionId}`);
+    } catch {}
     supabase
       .from("cook_sessions")
       .update({ status: "completed", completed_at: new Date().toISOString() })

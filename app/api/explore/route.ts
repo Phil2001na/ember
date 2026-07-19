@@ -30,8 +30,8 @@ export async function POST() {
 
 Generate a fresh batch of dishes worth exploring — a spread from very approachable
 comfort food to a couple of "level up" challenges. Mix cuisines; include at least one
-southern-African dish. Everyday supermarket ingredients only, no specialty equipment
-beyond a normal home kitchen.
+southern-African dish and at least one baked good (a bread, dessert, or savoury bake).
+Everyday supermarket ingredients only, no specialty equipment beyond a normal home kitchen.
 ${existingTitles.length ? `\nDo NOT repeat any of these existing dishes: ${existingTitles.join(", ")}` : ""}`,
   });
 

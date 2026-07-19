@@ -66,7 +66,11 @@ export default function StepCard({
             </p>
           )}
         </div>
-        {step.heat && <HeatDial heat={step.heat} label={HEAT_LABEL[step.heat]} active={running} />}
+        {step.oven_temp_c ? (
+          <HeatDial tempC={step.oven_temp_c} label={`${step.oven_temp_c}°C oven`} active={running} />
+        ) : (
+          step.heat && <HeatDial heat={step.heat} label={HEAT_LABEL[step.heat]} active={running} />
+        )}
       </div>
 
       {hasTimer && (

@@ -13,6 +13,8 @@ export async function POST(request: Request) {
   const { title, notes, mode } = await request.json();
   if (!title) return NextResponse.json({ error: "no title" }, { status: 400 });
 
+  const hasScale = kitchen.equipment.some((e) => /scale/i.test(e));
+
   const ingredientRule =
     mode === "authentic"
       ? `- This is the proper, standard version of the dish. Use the real, correct
@@ -39,9 +41,17 @@ ${ingredientRule}
   what it looks/sounds/smells like when right.
 - "watch_for" is the doneness cue or the failure sign — the thing nobody tells
   beginners ("if the garlic turns dark brown it's burnt, start over").
-- Set "heat" whenever a burner or oven is involved. Set "timer_min" when waiting
-  a fixed time matters (simmering, baking, resting).
-- Amounts in practical terms ("2 tbsp", "half the onion") — assume no kitchen scale.`,
+- Set "heat" whenever a burner is involved. Set "oven_temp_c" (°C) on every step
+  that uses the oven — including the preheat step. Set "timer_min" when waiting
+  a fixed time matters (simmering, baking, proofing, resting).
+- Long passive waits (proofing, marinating, cooling) get their own step with
+  "timer_min" set and a "detail" explaining what's happening and what ready looks like.
+- Amounts in practical terms ("2 tbsp", "half the onion")${hasScale ? "" : " — assume no kitchen scale"}.
+  EXCEPT baking: baking is chemistry, so for baked goods give precise amounts${
+    hasScale
+      ? " in grams (they have a kitchen scale)"
+      : " in level cups and spoons (no kitchen scale)"
+  } — never "eyeball it".`,
   });
 
   return NextResponse.json(object);

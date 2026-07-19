@@ -2,6 +2,20 @@
 
 ## 2026-07-19
 
+### 21:32 — Baking side
+- `RecipeStepSchema` gained `oven_temp_c` (°C, nullable); `heat` is now
+  stovetop-only. Cook mode shows an oven dial (thermometer, scaled to 250°C)
+  when a step has an oven temp, falling back to the heat dial otherwise.
+- Recipe prompt: oven temps required on oven steps (incl. preheat); baking
+  amounts are precise — grams if a kitchen scale is in equipment, level
+  cups/spoons otherwise (the old blanket "assume no scale" rule fought baking).
+- Long passive waits (proofing, cooling) get their own step + timer, and cook
+  timers now persist to localStorage per session so an hour-long proof
+  survives a tab reload; cleared on finish.
+- Equipment options: added "kitchen scale" and "baking tins & trays".
+  Suggestions may include a pantry-supported bake; Explore batches now always
+  include at least one baked good.
+
 ### 14:40 — Email accounts (anonymous-first, link to keep data)
 - New `AccountCard` on the profile page: anonymous users can "Save your
   kitchen" (attach email+password to the same user via

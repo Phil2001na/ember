@@ -30,6 +30,8 @@ Rules:
 - Only use equipment they actually have.
 - Match difficulty to their skill level — a beginner gets forgiving dishes.
 - Make descriptions appetizing and concrete, not generic.
+- Baking counts too: if their pantry supports it (flour, sugar, eggs, butter…) and
+  they have an oven, one suggestion may be a baked good — bread, muffins, a dessert.
 - Real, satisfying meals — not "toast with butter" filler.${
       craving ? `\n- They said they're in the mood for: "${craving}". Weight suggestions toward that.` : ""
     }`,
