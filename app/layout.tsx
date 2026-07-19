@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Outfit } from "next/font/google";
 import "./globals.css";
+import SwRegister from "./sw-register";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -40,6 +41,7 @@ export default function RootLayout({
     <html lang="en" className={`${fraunces.variable} ${outfit.variable}`}>
       <body>
         <div className="shell">{children}</div>
+        <SwRegister />
       </body>
     </html>
   );

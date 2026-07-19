@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BookMarked, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import TabBar from "@/components/TabBar";
+import AccountCard from "./AccountCard";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -54,6 +55,12 @@ export default async function ProfilePage() {
             {savedCount ?? 0} <ChevronRight size={16} />
           </span>
         </Link>
+
+        <AccountCard
+          email={user?.email ?? user?.new_email ?? null}
+          isAnonymous={user?.is_anonymous ?? true}
+          emailConfirmed={Boolean(user?.email_confirmed_at)}
+        />
       </main>
       <TabBar />
     </>

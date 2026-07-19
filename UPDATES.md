@@ -2,6 +2,31 @@
 
 ## 2026-07-19
 
+### 14:40 — Email accounts (anonymous-first, link to keep data)
+- New `AccountCard` on the profile page: anonymous users can "Save your
+  kitchen" (attach email+password to the same user via
+  `auth.updateUser` — all data keeps its user_id) or sign in to an
+  existing account on a new device.
+- `/auth/confirmed` landing page for the email-confirmation link.
+- Privacy policy updated: email is optional, sign-in only, never marketing.
+- Decision: stay in the shared Supabase project (`ember` schema) — free
+  per-user limit is 2 active projects; split out via schema dump when the
+  app justifies Pro.
+- MANUAL STEP (Supabase dashboard, shared project): add
+  `https://<ember-domain>/auth/confirmed` to Auth → URL Configuration →
+  Redirect URLs, or the confirmation email will bounce users to the
+  project-level Site URL (another app's domain).
+
+### 14:05 — Play Store Phase 1: PWA hardening
+- Service worker (`public/sw.js`): network-first pages with offline fallback,
+  cache-first for hashed build assets; `/api/*` never cached. Registered via
+  new `app/sw-register.tsx` in the root layout.
+- New branded `/offline` fallback page and `/privacy` policy page (Play
+  Console requires a public privacy-policy URL).
+- Manifest: added `id`, `scope`, `orientation: portrait`, `categories: [food]`.
+- `proxy.ts` matcher now excludes `sw.js` and `.well-known` (for the
+  upcoming TWA `assetlinks.json`).
+
 ### 00:23 — Gauge surface smolders
 - Track shader: the bar's top edge is now perturbed by the flame noise
   (subtle wobble) so the molten surface reads ragged/smoldering instead of
