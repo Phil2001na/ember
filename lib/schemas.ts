@@ -136,6 +136,15 @@ export const DishCheckSchema = z.object({
 });
 export type DishCheck = z.infer<typeof DishCheckSchema>;
 
+/* ─── Planned meals ("I want to make X" → drafts the shopping list) ─── */
+
+export type PlannedMeal = {
+  id: string;
+  title: string;
+  ingredients: DishCheck["ingredients"];
+  created_at: string;
+};
+
 /* ─── Recipe (Claude) ─── */
 
 export const RecipeStepSchema = z.object({

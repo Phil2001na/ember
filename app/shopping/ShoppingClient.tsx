@@ -1,10 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, RefreshCw, ShoppingBasket, Sparkles, WifiOff, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  Check,
+  ChefHat,
+  CookingPot,
+  RefreshCw,
+  ShoppingBasket,
+  Sparkles,
+  Trash2,
+  WifiOff,
+  X,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Skeleton from "@/components/Skeleton";
-import type { ShoppingItem, ShoppingSuggestions } from "@/lib/schemas";
+import RecipePreview from "@/components/RecipePreview";
+import RecipePreviewSkeleton from "@/components/RecipePreviewSkeleton";
+import type { DishCheck, PlannedMeal, Recipe, ShoppingItem, ShoppingSuggestions } from "@/lib/schemas";
 
 /*
  * Offline-first: every change lands in state + localStorage immediately and is
@@ -40,12 +53,15 @@ function loadLocal<T>(key: string): T | null {
 export default function ShoppingClient({
   initialItems,
   pantryNames,
+  initialPlanned,
   userId,
 }: {
   initialItems: ShoppingItem[];
   pantryNames: string[];
+  initialPlanned: PlannedMeal[];
   userId: string;
 }) {
+  const router = useRouter();
   const supabase = createClient();
   const [items, setItems] = useState<ShoppingItem[]>(initialItems);
   const [pending, setPending] = useState(0); // ops waiting to sync
@@ -58,6 +74,18 @@ export default function ShoppingClient({
   const queueRef = useRef<Op[]>([]);
   const flushing = useRef(false);
   const pantrySet = new Set(pantryNames.map((n) => n.toLowerCase()));
+
+  // "I want to make X" — Ember works out the ingredients, adds what's
+  // missing to the list, and remembers the dish so it can be started later.
+  const [planned, setPlanned] = useState<PlannedMeal[]>(initialPlanned);
+  const [planInput, setPlanInput] = useState("");
+  const [planning, setPlanning] = useState(false);
+  const [planCheck, setPlanCheck] = useState<DishCheck | null>(null);
+  const [planError, setPlanError] = useState(false);
+  const [cooking, setCooking] = useState<PlannedMeal | null>(null);
+  const [cookRecipe, setCookRecipe] = useState<Recipe | null>(null);
+  const [cookError, setCookError] = useState<string | null>(null);
+  const [startingCook, setStartingCook] = useState(false);
 
   async function runOp(op: Op): Promise<boolean> {
     if (op.kind === "upsert") {
@@ -280,8 +308,152 @@ export default function ShoppingClient({
     );
   }
 
+  /** "I want to make Nashville hot chicken" — work out what that actually takes. */
+  async function submitPlan(e: React.FormEvent) {
+    e.preventDefault();
+    const dish = planInput.trim();
+    if (!dish || planning) return;
+    setPlanning(true);
+    setPlanError(false);
+    setPlanCheck(null);
+    try {
+      const res = await fetch("/api/dish-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dish }),
+      });
+      if (!res.ok) throw new Error("check failed");
+      setPlanCheck(await res.json());
+    } catch {
+      setPlanError(true);
+    } finally {
+      setPlanning(false);
+    }
+  }
+
+  /** Adds what's missing to the list and remembers the dish to cook later. */
+  async function confirmPlan() {
+    if (!planCheck) return;
+    const check = planCheck;
+    setPlanCheck(null);
+    setPlanInput("");
+
+    const { data } = await supabase
+      .from("planned_meals")
+      .insert({ user_id: userId, title: check.title, ingredients: check.ingredients })
+      .select("id, title, ingredients, created_at")
+      .single();
+    if (data) setPlanned((prev) => [data as PlannedMeal, ...prev]);
+
+    const missing = check.ingredients.filter(
+      (i) => !i.have && !items.some((it) => it.name === i.item.trim().toLowerCase())
+    );
+    if (!missing.length) return;
+    const now = new Date().toISOString();
+    const newItems: ShoppingItem[] = missing.map((i) => ({
+      id: crypto.randomUUID(),
+      name: i.item.trim().toLowerCase(),
+      quantity_text: i.amount,
+      reason: `for ${check.title.toLowerCase()}`,
+      checked: false,
+      created_at: now,
+    }));
+    mutate(
+      [...newItems, ...items],
+      newItems.map((i) => ({
+        kind: "upsert" as const,
+        name: i.name,
+        quantity_text: i.quantity_text,
+        reason: i.reason,
+        checked: false,
+      }))
+    );
+  }
+
+  async function removePlanned(meal: PlannedMeal) {
+    setPlanned((prev) => prev.filter((m) => m.id !== meal.id));
+    await supabase.from("planned_meals").delete().eq("id", meal.id);
+  }
+
+  async function startPlanned(meal: PlannedMeal) {
+    setCooking(meal);
+    setCookRecipe(null);
+    setCookError(null);
+    try {
+      const missing = meal.ingredients.filter((i) => !i.have);
+      const notes = missing.length
+        ? `Still need to buy: ${missing.map((m) => `${m.item} (${m.amount})`).join(", ")}`
+        : undefined;
+      const res = await fetch("/api/recipe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: meal.title, notes, mode: "authentic" }),
+      });
+      if (!res.ok) throw new Error("Couldn't write that recipe — try again.");
+      setCookRecipe(await res.json());
+    } catch (err) {
+      setCooking(null);
+      setCookError(err instanceof Error ? err.message : "Something went wrong");
+    }
+  }
+
+  async function confirmStartCooking() {
+    if (!cookRecipe || !cooking) return;
+    setStartingCook(true);
+    const { data, error } = await supabase
+      .from("cook_sessions")
+      .insert({ user_id: userId, recipe: cookRecipe, status: "active" })
+      .select("id")
+      .single();
+    setStartingCook(false);
+    if (error || !data) {
+      setCookError(error?.message ?? "Couldn't start session");
+      return;
+    }
+    await supabase.from("planned_meals").delete().eq("id", cooking.id);
+    router.push(`/cook/${data.id}`);
+  }
+
   const toBuy = items.filter((i) => !i.checked);
   const inBasket = items.filter((i) => i.checked);
+
+  if (cooking) {
+    return (
+      <main className="page fade-in">
+        {cookError ? (
+          <div className="card" style={{ textAlign: "center", padding: 32 }}>
+            <p style={{ color: "var(--red-warn)", marginBottom: 16 }}>{cookError}</p>
+            <button
+              className="btn btn-ghost"
+              onClick={() => {
+                setCooking(null);
+                setCookError(null);
+              }}
+            >
+              Back to the list
+            </button>
+          </div>
+        ) : !cookRecipe ? (
+          <>
+            <p className="page-sub" style={{ marginBottom: 12 }}>
+              Writing your {cooking.title} recipe…
+            </p>
+            <RecipePreviewSkeleton />
+          </>
+        ) : (
+          <RecipePreview
+            recipe={cookRecipe}
+            starting={startingCook}
+            onStart={confirmStartCooking}
+            onBack={() => {
+              setCooking(null);
+              setCookRecipe(null);
+            }}
+          />
+        )}
+      </main>
+    );
+  }
 
   return (
     <main className="page fade-in">
@@ -308,6 +480,100 @@ export default function ShoppingClient({
           )}
         </p>
       )}
+
+      {/* Planning to cook — "I want to make X" drafts the list from a real dish */}
+      <div className="card" style={{ marginBottom: 16, padding: "14px" }}>
+        <p style={{ fontSize: "0.9rem", marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
+          <ChefHat size={16} style={{ color: "var(--ember-400)", flexShrink: 0 }} /> Planning to cook something?
+        </p>
+        <form onSubmit={submitPlan} style={{ display: "flex", gap: 8 }}>
+          <input
+            className="input"
+            placeholder="e.g. Nashville hot chicken"
+            value={planInput}
+            onChange={(e) => setPlanInput(e.target.value)}
+            disabled={planning || !online}
+          />
+          <button
+            className="btn btn-primary"
+            type="submit"
+            disabled={planning || !planInput.trim() || !online}
+            title={online ? undefined : "Needs a connection"}
+          >
+            {planning ? <span className="spinner" style={{ width: 16, height: 16 }} /> : "Check it"}
+          </button>
+        </form>
+
+        {planError && (
+          <p style={{ color: "var(--red-warn)", fontSize: "0.85rem", marginTop: 10 }}>
+            Couldn&apos;t work that out — try again?
+          </p>
+        )}
+
+        {planCheck && (
+          <div className="fade-in" style={{ marginTop: 12 }}>
+            <p style={{ fontWeight: 600, marginBottom: 6 }}>{planCheck.title}</p>
+            <p style={{ color: "var(--text-dim)", fontSize: "0.85rem", marginBottom: 8 }}>
+              {planCheck.ingredients.filter((i) => !i.have).length
+                ? `Need to buy: ${planCheck.ingredients
+                    .filter((i) => !i.have)
+                    .map((i) => i.item)
+                    .join(", ")}`
+                : "You've already got everything for this one."}
+            </p>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn btn-primary" onClick={confirmPlan}>
+                {planCheck.ingredients.some((i) => !i.have) ? "Add to my list" : "Plan it"}
+              </button>
+              <button className="btn btn-ghost" onClick={() => setPlanCheck(null)}>
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
+        {planned.length > 0 && (
+          <div style={{ display: "grid", gap: 8, marginTop: planCheck ? 14 : 12 }}>
+            {planned.map((meal) => {
+              const missing = meal.ingredients.filter((i) => !i.have);
+              return (
+                <div
+                  key={meal.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "10px 12px",
+                    borderRadius: "var(--radius)",
+                    background: "var(--surface-2)",
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span>{meal.title}</span>
+                    <div style={{ color: "var(--text-faint)", fontSize: "0.78rem" }}>
+                      {missing.length ? `${missing.length} to buy` : "have everything"}
+                    </div>
+                  </div>
+                  <button
+                    className="btn btn-ghost"
+                    style={{ padding: "6px 12px", fontSize: "0.85rem", flexShrink: 0 }}
+                    onClick={() => startPlanned(meal)}
+                  >
+                    <CookingPot size={14} /> cook it
+                  </button>
+                  <button
+                    onClick={() => removePlanned(meal)}
+                    style={{ color: "var(--text-faint)", padding: "4px 6px", display: "inline-flex" }}
+                    aria-label={`Remove ${meal.title} from planned meals`}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* AI-drafted list */}
       {!suggestions && !suggesting && (

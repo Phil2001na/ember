@@ -1,5 +1,22 @@
 # Ember — update log
 
+## 2026-07-20
+
+### Planned meals — "I want to make X" drafts the shopping list
+- Shopping page gets a "Planning to cook something?" card above the AI-draft
+  button: type a dish name, Ember (`/api/dish-check`) works out the real
+  ingredient list and checks it against the pantry, then one tap adds what's
+  missing to the shopping list (tagged `for <dish>`) and remembers the dish.
+- New `ember.planned_meals` table (migration `004_planned_meals.sql`) holds
+  those remembered dishes so they survive past the session — each shows as a
+  small row with a to-buy count, a "cook it" button that writes the full
+  recipe (`/api/recipe`) and starts a cook session, and a remove button.
+  Reuses the existing `/api/dish-check` + `/api/recipe` + `cook_sessions`
+  plumbing rather than adding new AI routes.
+- Replaces the old "random" pantry-only shopping suggestions as the primary
+  way to build a list around a specific future meal; the pantry-restock
+  draft button stays for general restocking.
+
 ## 2026-07-19
 
 ### 21:32 — Baking side
