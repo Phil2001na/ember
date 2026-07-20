@@ -2,6 +2,12 @@
 
 ## 2026-07-20
 
+### 23:21 — "Buy again" moves a finished pantry item to the shopping list
+- Pantry item rows get a "buy again" button alongside the X: instead of
+  just deleting something you've run out of, it removes it from the
+  pantry and upserts it straight onto the shopping list (same quantity
+  text carried over). Plain X still just deletes, for corrections.
+
 ### Planned meals — "I want to make X" drafts the shopping list
 - Shopping page gets a "Planning to cook something?" card above the AI-draft
   button: type a dish name, Ember (`/api/dish-check`) works out the real
