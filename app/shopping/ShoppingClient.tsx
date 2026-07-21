@@ -687,8 +687,16 @@ export default function ShoppingClient({
       {suggestions && (
         <div className="card fade-in" style={{ marginBottom: 16, padding: "14px" }}>
           <p style={{ fontSize: "0.9rem", marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
-            <Sparkles size={16} style={{ color: "var(--ember-400)", flexShrink: 0 }} /> Based on your pantry, Ember suggests:
+            <Sparkles size={16} style={{ color: "var(--ember-400)", flexShrink: 0 }} />
+            {suggestions.some((item) => item.priority === "unlock")
+              ? "One item away"
+              : "Based on your pantry, Ember suggests"}
           </p>
+          {suggestions.some((item) => item.priority === "unlock") && (
+            <p style={{ color: "var(--text-dim)", fontSize: "0.8rem", margin: "-4px 0 12px" }}>
+              Small buys that turn what you already have into complete meals.
+            </p>
+          )}
           {suggestions.length === 0 ? (
             <p style={{ color: "var(--text-faint)", fontSize: "0.85rem" }}>
               Nothing to add — your pantry and list already look well stocked.
@@ -698,7 +706,14 @@ export default function ShoppingClient({
               {suggestions.map((s) => (
                 <div
                   key={s.name}
-                  style={{ display: "flex", alignItems: "center", gap: 10 }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: s.priority === "unlock" ? "10px" : undefined,
+                    borderRadius: s.priority === "unlock" ? 12 : undefined,
+                    background: s.priority === "unlock" ? "var(--accent-soft)" : undefined,
+                  }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ textTransform: "capitalize" }}>{s.name}</span>
@@ -712,6 +727,11 @@ export default function ShoppingClient({
                     <div style={{ color: "var(--text-faint)", fontSize: "0.75rem" }}>
                       {s.reason}
                     </div>
+                    {s.unlock_dishes.length > 0 && (
+                      <div style={{ color: "var(--ember-300)", fontSize: "0.78rem", marginTop: 3 }}>
+                        Unlocks {s.unlock_dishes.join(" · ")}
+                      </div>
+                    )}
                   </div>
                   <button
                     className="btn btn-ghost"

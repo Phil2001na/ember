@@ -11,6 +11,8 @@ import type { Recipe, Suggestion } from "@/lib/schemas";
 import RecipePreview from "@/components/RecipePreview";
 import SuggestionCarousel from "@/components/SuggestionCarousel";
 import PantrySheet from "@/components/PantrySheet";
+import PushToTalk from "@/components/PushToTalk";
+import type { HomeNudge } from "@/lib/homeNudge";
 
 function messageText(m: UIMessage): string {
   return m.parts
@@ -68,10 +70,12 @@ export default function KitchenChat({
   greeting,
   pantryEmpty,
   activeSession,
+  nudge,
 }: {
   greeting: string;
   pantryEmpty: boolean;
   activeSession: { id: string; title: string; step: number } | null;
+  nudge: HomeNudge;
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -214,7 +218,7 @@ export default function KitchenChat({
         <div style={{ padding: "0 18px 10px" }}>
           <div className="card" style={{ padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
             <p style={{ fontSize: "0.82rem", color: "var(--text-dim)" }}>
-              Your pantry's empty — tell me what you've got, or fill it in properly.
+              Your pantry&apos;s empty — tell me what you&apos;ve got, or fill it in properly.
             </p>
             <Link href="/pantry" className="btn btn-ghost" style={{ padding: "8px 12px", fontSize: "0.8rem", flexShrink: 0 }}>
               Add items
@@ -225,9 +229,24 @@ export default function KitchenChat({
 
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "6px 18px", display: "grid", gap: 12, alignContent: "start" }}>
         {messages.length === 0 && (
-          <p style={{ color: "var(--text-faint)", fontSize: "0.9rem", textAlign: "center", padding: "40px 10px" }}>
-            Tell me what you want to cook, or what you've got and I'll figure out the rest.
-          </p>
+          <button
+            className="card fade-in"
+            onClick={() => sendMessage({ text: nudge.prompt })}
+            disabled={busy}
+            style={{
+              color: "var(--text-dim)",
+              fontSize: "0.92rem",
+              textAlign: "left",
+              marginTop: 26,
+              padding: "16px 18px",
+              borderColor: "var(--border-strong)",
+            }}
+          >
+            {nudge.text}
+            <span style={{ display: "block", color: "var(--ember-400)", marginTop: 8, fontSize: "0.8rem" }}>
+              Try it →
+            </span>
+          </button>
         )}
         {messages.map((m) => {
           const text = messageText(m);
@@ -303,6 +322,7 @@ export default function KitchenChat({
             value={input}
             onChange={(e) => setInput(e.target.value)}
           />
+          <PushToTalk disabled={busy} onTranscript={(text) => sendMessage({ text })} />
           <button className="composer-btn composer-btn-send" disabled={busy || !input.trim()} aria-label="Send">
             <ArrowUp size={19} />
           </button>

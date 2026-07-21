@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { X } from "lucide-react";
+import { Share2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Recipe, SavedRecipe } from "@/lib/schemas";
 import RecipePreview from "@/components/RecipePreview";
+import { shareSavedRecipe } from "@/lib/shareRecipe";
 
 export default function SavedClient({ initialRecipes }: { initialRecipes: SavedRecipe[] }) {
   const router = useRouter();
@@ -13,6 +14,8 @@ export default function SavedClient({ initialRecipes }: { initialRecipes: SavedR
   const [recipes, setRecipes] = useState(initialRecipes);
   const [picked, setPicked] = useState<SavedRecipe | null>(null);
   const [starting, setStarting] = useState(false);
+  const [sharingId, setSharingId] = useState<string | null>(null);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function remove(id: string) {
@@ -36,6 +39,21 @@ export default function SavedClient({ initialRecipes }: { initialRecipes: SavedR
       return;
     }
     router.push(`/cook/${data.id}`);
+  }
+
+  async function share(saved: SavedRecipe) {
+    setSharingId(saved.id);
+    setError(null);
+    setShareNotice(null);
+    try {
+      const result = await shareSavedRecipe(saved.id, saved.recipe.title);
+      setShareNotice(result === "copied" ? "Recipe link copied." : "Recipe shared.");
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      setError(err instanceof Error ? err.message : "Couldn't share that recipe.");
+    } finally {
+      setSharingId(null);
+    }
   }
 
   if (picked) {
@@ -63,6 +81,11 @@ export default function SavedClient({ initialRecipes }: { initialRecipes: SavedR
       {error && (
         <p style={{ color: "var(--red-warn)", fontSize: "0.9rem", marginBottom: 12 }}>{error}</p>
       )}
+      {shareNotice && (
+        <p className="badge badge-accent" style={{ display: "inline-flex", marginBottom: 12 }}>
+          <Share2 /> {shareNotice}
+        </p>
+      )}
 
       <div style={{ display: "grid", gap: 12 }}>
         {recipes.map((r) => (
@@ -79,6 +102,14 @@ export default function SavedClient({ initialRecipes }: { initialRecipes: SavedR
               <p style={{ color: "var(--text-faint)", fontSize: "0.78rem" }}>
                 {r.recipe.time_minutes} min · serves {r.recipe.servings} · {r.recipe.steps.length} steps
               </p>
+            </button>
+            <button
+              onClick={() => share(r)}
+              disabled={sharingId === r.id}
+              style={{ color: "var(--ember-400)", padding: "4px 8px", display: "inline-flex" }}
+              aria-label={`Share ${r.recipe.title}`}
+            >
+              {sharingId === r.id ? <span className="spinner" style={{ width: 17, height: 17 }} /> : <Share2 size={17} />}
             </button>
             <button
               onClick={() => remove(r.id)}

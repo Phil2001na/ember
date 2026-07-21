@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import TabBar from "@/components/TabBar";
 import KitchenChat from "@/components/KitchenChat";
+import { homeNudge } from "@/lib/homeNudge";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -16,10 +17,10 @@ export default async function HomePage() {
     .maybeSingle();
   if (!profile) redirect("/onboarding");
 
-  const [{ count: pantryCount }, { data: activeSession }] = await Promise.all([
+  const [{ data: pantry }, { data: activeSession }] = await Promise.all([
     supabase
       .from("pantry_items")
-      .select("*", { count: "exact", head: true })
+      .select("name, quantity_text")
       .eq("user_id", user!.id),
     supabase
       .from("cook_sessions")
@@ -31,14 +32,27 @@ export default async function HomePage() {
       .maybeSingle(),
   ]);
 
-  const hour = new Date().getHours();
+  const windhoekParts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Africa/Windhoek",
+      hour: "2-digit",
+      day: "2-digit",
+      month: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(new Date())
+      .map((part) => [part.type, part.value])
+  );
+  const hour = Number(windhoekParts.hour);
   const greeting = hour < 11 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const dayKey = Number(windhoekParts.month) * 31 + Number(windhoekParts.day);
 
   return (
     <>
       <KitchenChat
         greeting={`${greeting}${profile.display_name ? `, ${profile.display_name}` : ""}`}
-        pantryEmpty={!pantryCount}
+        pantryEmpty={!pantry?.length}
+        nudge={homeNudge(hour, pantry ?? [], dayKey)}
         activeSession={
           activeSession
             ? {

@@ -23,8 +23,8 @@ Suggest what they should buy on their next shop. Prioritize, in order:
 1. Pantry items whose quantity says they're running low or almost empty —
    restock those first (reason: "running low").
 2. A few items that UNLOCK real meals with what they already have — e.g. if
-   they have pasta and tomatoes but no cheese, suggest parmesan. Name the dish
-   it unlocks in the reason so they see the point.
+   they have pasta and tomatoes but no cheese, suggest parmesan. Put 1-3
+   concrete dish names in unlock_dishes so the value of that one purchase is obvious.
 3. Missing everyday staples a working kitchen needs (oil, onions, garlic,
    salt, a protein) — only ones genuinely absent from their pantry.
 

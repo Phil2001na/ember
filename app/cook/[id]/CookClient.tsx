@@ -16,6 +16,7 @@ import {
   Flame,
   Home,
   MessageCircle,
+  Share2,
   ShoppingBasket,
   Volume2,
   VolumeX,
@@ -28,6 +29,7 @@ import TimerBar from "@/components/TimerBar";
 import ChatDrawer from "@/components/ChatDrawer";
 import PushToTalk from "@/components/PushToTalk";
 import { useCookTimers } from "@/lib/useCookTimers";
+import { shareSavedRecipe } from "@/lib/shareRecipe";
 
 export default function CookClient({
   sessionId,
@@ -50,7 +52,10 @@ export default function CookClient({
   const [chatOpen, setChatOpen] = useState(false);
   const [speakReplies, setSpeakReplies] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [savedRecipeId, setSavedRecipeId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
   // post-cook pantry check: null = not checked, [] = nothing to remove
   const [usedUp, setUsedUp] = useState<string[] | null>(null);
   const [usedUpChecking, setUsedUpChecking] = useState(false);
@@ -62,7 +67,7 @@ export default function CookClient({
   const appliedTools = useRef<Set<string>>(new Set());
   const stepRef = useRef(stepIdx);
   stepRef.current = stepIdx;
-  const cookTimers = useCookTimers(`ember-timers-${sessionId}`);
+  const cookTimers = useCookTimers(`ember-timers-${sessionId}`, `/cook/${sessionId}`);
 
   const { messages, sendMessage, status } = useChat({
     messages: initialMessages,
@@ -213,11 +218,32 @@ export default function CookClient({
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("saved_recipes")
-      .insert({ user_id: user!.id, recipe });
+      .insert({ user_id: user!.id, recipe })
+      .select("id")
+      .single();
     setSaving(false);
-    if (!error) setSaved(true);
+    if (!error && data) {
+      setSaved(true);
+      setSavedRecipeId(data.id);
+    }
+  }
+
+  async function shareRecipe() {
+    if (!savedRecipeId) return;
+    setSharing(true);
+    setShareNotice(null);
+    try {
+      const result = await shareSavedRecipe(savedRecipeId, recipe.title);
+      setShareNotice(result === "copied" ? "Recipe link copied." : "Recipe shared.");
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === "AbortError")) {
+        setShareNotice("Couldn't share that recipe yet.");
+      }
+    } finally {
+      setSharing(false);
+    }
   }
 
   if (done) {
@@ -308,6 +334,23 @@ export default function CookClient({
           </div>
           {!saved && <ChevronRight size={19} style={{ color: "var(--text-faint)" }} />}
         </button>
+        {savedRecipeId && (
+          <button
+            className="card row-card fade-in"
+            style={{ marginBottom: 16 }}
+            onClick={shareRecipe}
+            disabled={sharing}
+          >
+            <span className="row-card-icon">
+              {sharing ? <span className="spinner" style={{ width: 18, height: 18 }} /> : <Share2 />}
+            </span>
+            <div style={{ flex: 1 }}>
+              <h3>Share this recipe</h3>
+              <p>{shareNotice ?? "Send someone straight into the guided cook"}</p>
+            </div>
+            <ChevronRight size={19} style={{ color: "var(--text-faint)" }} />
+          </button>
+        )}
         <button className="btn btn-primary btn-full" style={{ padding: "16px 20px" }} onClick={() => router.push("/")}>
           <Home /> Back home
         </button>

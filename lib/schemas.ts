@@ -30,6 +30,21 @@ export const DishRecognizeSchema = z.object({
 });
 export type DishRecognize = z.infer<typeof DishRecognizeSchema>;
 
+/* Pantry voice/text import */
+
+export const PantryImportSchema = z.object({
+  items: z.array(
+    z.object({
+      name: z.string().describe("Ingredient name, singular, lowercase, e.g. 'tomato paste'"),
+      quantity_estimate: z
+        .string()
+        .nullable()
+        .describe("Only a quantity the cook actually mentioned; otherwise null"),
+    })
+  ),
+});
+export type PantryImport = z.infer<typeof PantryImportSchema>;
+
 /* ─── Suggestions (Claude) ─── */
 
 export const SuggestionSchema = z.object({
@@ -105,6 +120,13 @@ export const ShoppingSuggestionsSchema = z.object({
           .describe(
             "Short, concrete why — e.g. 'running low', 'unlocks a quick chicken stir-fry with your peppers'"
           ),
+        priority: z
+          .enum(["unlock", "restock", "staple"])
+          .describe("Whether this purchase unlocks meals, restocks a low item, or fills a staple gap"),
+        unlock_dishes: z
+          .array(z.string())
+          .max(3)
+          .describe("Specific dishes this one item unlocks with the current pantry; empty unless priority is unlock"),
       })
     )
     .describe("5 to 10 suggested items, most useful first"),

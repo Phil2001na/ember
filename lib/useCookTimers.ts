@@ -26,16 +26,24 @@ function remainingOf(t: StoredTimer, now: number) {
   return Math.max(0, Math.round((t.endAt - now) / 1000));
 }
 
-function notifyTimerDone(stepIdx: number, label: string) {
+async function notifyTimerDone(stepIdx: number, label: string, url?: string) {
   try {
     navigator.vibrate?.([300, 100, 300, 100, 600]);
   } catch {}
   try {
     if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-      new Notification("⏱️ Timer done", {
+      const options: NotificationOptions = {
         body: `Step ${stepIdx + 1}: ${label}`,
         tag: `ember-timer-${stepIdx}`,
-      });
+        icon: "/icon-192.png",
+        data: { url: url ?? "/" },
+      };
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification("⏱️ Timer done", options);
+      } else {
+        new Notification("⏱️ Timer done", options);
+      }
     }
   } catch {}
 }
@@ -44,7 +52,7 @@ function notifyTimerDone(stepIdx: number, label: string) {
 // survive step navigation and several can run concurrently. When a storageKey
 // is given, timers also survive a reload — long waits (proofing, baking) mean
 // people leave and come back.
-export function useCookTimers(storageKey?: string) {
+export function useCookTimers(storageKey?: string, notificationUrl?: string) {
   const [timers, setTimers] = useState<Record<number, StoredTimer>>(() => {
     if (!storageKey || typeof window === "undefined") return {};
     try {
@@ -84,13 +92,13 @@ export function useCookTimers(storageKey?: string) {
           changed = true;
           if (!notifiedRef.current.has(t.stepIdx)) {
             notifiedRef.current.add(t.stepIdx);
-            notifyTimerDone(t.stepIdx, t.label);
+            void notifyTimerDone(t.stepIdx, t.label, notificationUrl);
           }
         }
       }
       return changed ? next : prev;
     });
-  }, [now]);
+  }, [now, notificationUrl]);
 
   const start = useCallback((stepIdx: number, minutes: number, label: string) => {
     try {

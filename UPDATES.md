@@ -34,6 +34,17 @@
   way to build a list around a specific future meal; the pantry-restock
   draft button stays for general restocking.
 
+### 00:25 — Meal unlocks, recipe sharing, and mobile timers
+- Shopping suggestions now identify one-item meal unlocks and show the specific dishes each small purchase makes possible.
+- Added privacy-safe recipe sharing through immutable UUID snapshots and public links that open directly into Ember’s guided cook. The isolated `ember.recipe_shares` migration is prepared but not applied to the shared Supabase project.
+- Timer completion now uses Android-compatible service worker notifications and reopens the exact cook when tapped; killed-app delivery still requires scheduled web push or a native bridge.
+
+### 00:07 — Frictionless pantry onboarding
+- Added a voice-or-text kitchen “rant” step to onboarding; Ember extracts a lightweight ingredient list for confirmation instead of requiring manual cataloguing.
+- Added the authenticated pantry-import AI route and quantity-aware pantry upsert flow.
+- Added rotating, pantry-aware home nudges for intents such as “choose for me,” low-effort cooking, using up ingredients, and cooking to impress.
+- Added push-to-talk to the main kitchen composer so spoken intents go straight to Ember.
+
 ## 2026-07-19
 
 ### 21:32 — Baking side
