@@ -1,6 +1,23 @@
 # Ember — update log
 
+## 2026-07-21
+
+### 14:19 — Identify a dish from a photo (e.g. a TikTok screenshot)
+- "Planning to cook something?" gets a camera button next to the text
+  input: upload a photo of a dish (a screenshot from a video, a plated
+  photo) and new `/api/dish-recognize` (Gemini vision) guesses the dish
+  name and drops it into the input for you to confirm or edit before
+  running the existing `/api/dish-check` flow — nothing is added to the
+  list until the user reviews the guessed name and taps "Check it".
+- Low-confidence guesses are flagged inline rather than presented as fact.
+
 ## 2026-07-20
+
+### 23:21 — "Buy again" moves a finished pantry item to the shopping list
+- Pantry item rows get a "buy again" button alongside the X: instead of
+  just deleting something you've run out of, it removes it from the
+  pantry and upserts it straight onto the shopping list (same quantity
+  text carried over). Plain X still just deletes, for corrections.
 
 ### Planned meals — "I want to make X" drafts the shopping list
 - Shopping page gets a "Planning to cook something?" card above the AI-draft

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  Camera,
   Check,
   ChefHat,
   CookingPot,
@@ -17,7 +18,14 @@ import { createClient } from "@/lib/supabase/client";
 import Skeleton from "@/components/Skeleton";
 import RecipePreview from "@/components/RecipePreview";
 import RecipePreviewSkeleton from "@/components/RecipePreviewSkeleton";
-import type { DishCheck, PlannedMeal, Recipe, ShoppingItem, ShoppingSuggestions } from "@/lib/schemas";
+import type {
+  DishCheck,
+  DishRecognize,
+  PlannedMeal,
+  Recipe,
+  ShoppingItem,
+  ShoppingSuggestions,
+} from "@/lib/schemas";
 
 /*
  * Offline-first: every change lands in state + localStorage immediately and is
@@ -86,6 +94,10 @@ export default function ShoppingClient({
   const [cookRecipe, setCookRecipe] = useState<Recipe | null>(null);
   const [cookError, setCookError] = useState<string | null>(null);
   const [startingCook, setStartingCook] = useState(false);
+  const dishPhotoRef = useRef<HTMLInputElement>(null);
+  const [recognizing, setRecognizing] = useState(false);
+  const [recognizeNote, setRecognizeNote] = useState<DishRecognize | null>(null);
+  const [recognizeError, setRecognizeError] = useState(false);
 
   async function runOp(op: Op): Promise<boolean> {
     if (op.kind === "upsert") {
@@ -331,6 +343,30 @@ export default function ShoppingClient({
     }
   }
 
+  /** "That's what I saw on TikTok" — guess the dish from a screenshot, drop it in the input to confirm. */
+  async function onDishPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setRecognizing(true);
+    setRecognizeError(false);
+    setRecognizeNote(null);
+    setPlanCheck(null);
+    try {
+      const form = new FormData();
+      form.append("photo", file);
+      const res = await fetch("/api/dish-recognize", { method: "POST", body: form });
+      if (!res.ok) throw new Error("recognize failed");
+      const result: DishRecognize = await res.json();
+      setPlanInput(result.dish);
+      setRecognizeNote(result);
+    } catch {
+      setRecognizeError(true);
+    } finally {
+      setRecognizing(false);
+    }
+  }
+
   /** Adds what's missing to the list and remembers the dish to cook later. */
   async function confirmPlan() {
     if (!planCheck) return;
@@ -486,14 +522,37 @@ export default function ShoppingClient({
         <p style={{ fontSize: "0.9rem", marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
           <ChefHat size={16} style={{ color: "var(--ember-400)", flexShrink: 0 }} /> Planning to cook something?
         </p>
+        <p style={{ color: "var(--text-faint)", fontSize: "0.78rem", marginBottom: 8 }}>
+          Type it, or upload a screenshot of something you saw and want to make.
+        </p>
+        <input
+          ref={dishPhotoRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={onDishPhoto}
+        />
         <form onSubmit={submitPlan} style={{ display: "flex", gap: 8 }}>
           <input
             className="input"
             placeholder="e.g. Nashville hot chicken"
             value={planInput}
-            onChange={(e) => setPlanInput(e.target.value)}
+            onChange={(e) => {
+              setPlanInput(e.target.value);
+              setRecognizeNote(null);
+            }}
             disabled={planning || !online}
           />
+          <button
+            className="btn btn-ghost"
+            type="button"
+            onClick={() => dishPhotoRef.current?.click()}
+            disabled={recognizing || !online}
+            title="Identify the dish from a photo"
+            aria-label="Identify the dish from a photo"
+          >
+            {recognizing ? <span className="spinner" style={{ width: 16, height: 16 }} /> : <Camera size={16} />}
+          </button>
           <button
             className="btn btn-primary"
             type="submit"
@@ -503,6 +562,19 @@ export default function ShoppingClient({
             {planning ? <span className="spinner" style={{ width: 16, height: 16 }} /> : "Check it"}
           </button>
         </form>
+
+        {recognizeNote && (
+          <p style={{ color: "var(--text-dim)", fontSize: "0.85rem", marginTop: 10 }}>
+            Looks like <strong>{recognizeNote.dish}</strong> — {recognizeNote.description}
+            {!recognizeNote.confident && " (not totally sure, double-check the name above)"}
+          </p>
+        )}
+
+        {recognizeError && (
+          <p style={{ color: "var(--red-warn)", fontSize: "0.85rem", marginTop: 10 }}>
+            Couldn&apos;t make that out from the photo — try a clearer shot, or type the dish name?
+          </p>
+        )}
 
         {planError && (
           <p style={{ color: "var(--red-warn)", fontSize: "0.85rem", marginTop: 10 }}>

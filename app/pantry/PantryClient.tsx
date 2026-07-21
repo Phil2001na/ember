@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Camera, X } from "lucide-react";
+import { Camera, ShoppingCart, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { PantryItem, VisionResult } from "@/lib/schemas";
 
@@ -42,6 +42,22 @@ export default function PantryClient({
   async function remove(id: string) {
     setItems((prev) => prev.filter((i) => i.id !== id));
     await supabase.from("pantry_items").delete().eq("id", id);
+  }
+
+  /** Ran out — off the pantry, straight onto the shopping list. */
+  async function outOf(item: PantryItem) {
+    setItems((prev) => prev.filter((i) => i.id !== item.id));
+    await supabase.from("pantry_items").delete().eq("id", item.id);
+    await supabase.from("shopping_items").upsert(
+      {
+        user_id: userId,
+        name: item.name,
+        quantity_text: item.quantity_text,
+        reason: null,
+        checked: false,
+      },
+      { onConflict: "user_id,name" }
+    );
   }
 
   async function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -205,13 +221,23 @@ export default function PantryClient({
                 </span>
               )}
             </div>
-            <button
-              onClick={() => remove(item.id)}
-              style={{ color: "var(--text-faint)", padding: "4px 8px", display: "inline-flex" }}
-              aria-label={`Remove ${item.name}`}
-            >
-              <X size={17} />
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <button
+                className="btn btn-ghost"
+                style={{ padding: "6px 10px", fontSize: "0.75rem", flexShrink: 0 }}
+                onClick={() => outOf(item)}
+                title="Ran out — move to shopping list"
+              >
+                <ShoppingCart size={14} /> buy again
+              </button>
+              <button
+                onClick={() => remove(item.id)}
+                style={{ color: "var(--text-faint)", padding: "4px 8px", display: "inline-flex" }}
+                aria-label={`Remove ${item.name}`}
+              >
+                <X size={17} />
+              </button>
+            </div>
           </div>
         ))}
       </div>
