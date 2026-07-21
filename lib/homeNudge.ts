@@ -27,7 +27,7 @@ export function homeNudge(hour: number, pantry: PantrySummary[], dayOfYear: numb
   const options: HomeNudge[] = evening
     ? [
         { text: "Low energy tonight? Give me an effort level and I’ll handle the rest.", prompt: "I’m low energy. Pick something easy for me." },
-        { text: "Cooking to impress? Tell me who. I’ll make what you have feel special.", prompt: "I’m cooking to impress someone. What should I make?" },
+        { text: "Cooking to impress tonight? I’ll make what you have feel special.", prompt: "I’m cooking to impress tonight. What should I make?" },
         { text: "Don’t feel like deciding? Give me the mood—or let me choose completely.", prompt: "Choose dinner for me. I don’t want to think." },
       ]
     : [
