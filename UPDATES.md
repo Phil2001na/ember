@@ -2,6 +2,13 @@
 
 ## 2026-07-21
 
+### 21:21 — Home nudge copy: drop the "tell me who" ask
+- The evening "cooking to impress" home-screen nudge asked "Tell me who"
+  without ever using an answer (tapping it just sends a fixed prompt to
+  chat) — read as an intrusive, unpaid-off personal question. Reworded
+  to "Cooking to impress tonight?" so the copy doesn't ask for something
+  the app was never going to collect.
+
 ### 18:56 — Fitness handoff integration
 - Added a versioned, privacy-preserving Fitness → Ember route that validates nutrition intent,
   reuses pantry-aware suggestions, and always offers a normal Ember escape hatch.
