@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Mic, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Flame, Mic, Sparkles } from "lucide-react";
 import PushToTalk from "@/components/PushToTalk";
 import { createClient } from "@/lib/supabase/client";
 import { EQUIPMENT_OPTIONS, type PantryImport } from "@/lib/schemas";
@@ -14,14 +14,35 @@ const SKILL_LEVELS = [
 ] as const;
 
 type PendingPantryItem = PantryImport["items"][number] & { keep: boolean };
+type Stage = "welcome" | "kitchen" | "pantry";
+
+const STAGE_INDEX: Record<Stage, number> = { welcome: 0, kitchen: 1, pantry: 2 };
+
+function StepHeader({ stage, onBack }: { stage: Stage; onBack?: () => void }) {
+  const step = STAGE_INDEX[stage];
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
+      {onBack && (
+        <button className="icon-btn" onClick={onBack} aria-label="Back" style={{ marginLeft: -10 }}>
+          <ArrowLeft />
+        </button>
+      )}
+      <div className="progress-dots" role="img" aria-label={`Step ${step + 1} of 3`}>
+        {[0, 1, 2].map((i) => (
+          <i key={i} className={i <= step ? "on" : ""} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function OnboardingPage() {
   const router = useRouter();
   const supabase = createClient();
+  const [stage, setStage] = useState<Stage>("welcome");
   const [name, setName] = useState("");
   const [equipment, setEquipment] = useState<Set<string>>(new Set(["stove", "pots & pans"]));
   const [skill, setSkill] = useState<string>("beginner");
-  const [stage, setStage] = useState<"kitchen" | "pantry">("kitchen");
   const [pantryRant, setPantryRant] = useState("");
   const [pantryItems, setPantryItems] = useState<PendingPantryItem[] | null>(null);
   const [extracting, setExtracting] = useState(false);
@@ -113,15 +134,58 @@ export default function OnboardingPage() {
     router.push("/");
   }
 
+  // ─── Step 1: welcome — say what Ember is, get a name, promise it's quick ───
+  if (stage === "welcome") {
+    return (
+      <main className="page fade-in" style={{ paddingTop: 48 }}>
+        <StepHeader stage="welcome" />
+        <div className="onboard-mark" style={{ marginBottom: 22 }}>
+          <Flame />
+        </div>
+        <h1 className="page-title" style={{ fontSize: "2rem" }}>
+          Meet <span className="accent-serif">Ember</span>
+        </h1>
+        <p className="page-sub" style={{ fontSize: "1rem", marginBottom: 28 }}>
+          A cooking companion that knows <em>your</em> kitchen. Tell it what you&apos;ve got,
+          and it works out what to cook — then talks you through it, step by step.
+        </p>
+
+        <label htmlFor="onboard-name" style={{ fontSize: "0.85rem", color: "var(--text-dim)" }}>
+          What should Ember call you?
+        </label>
+        <input
+          id="onboard-name"
+          className="input"
+          placeholder="Your name"
+          autoComplete="given-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && setStage("kitchen")}
+          style={{ margin: "6px 0 20px" }}
+        />
+
+        <button className="btn btn-primary btn-full" onClick={() => setStage("kitchen")}>
+          Set up my kitchen <ArrowRight />
+        </button>
+        <p style={{ color: "var(--text-faint)", fontSize: "0.8rem", textAlign: "center", marginTop: 12 }}>
+          Takes about a minute. You can change everything later.
+        </p>
+      </main>
+    );
+  }
+
+  // ─── Step 3: pantry ramble ───
   if (stage === "pantry") {
     return (
-      <main className="page fade-in" style={{ paddingTop: 40 }}>
+      <main className="page fade-in" style={{ paddingTop: 24 }}>
+        <StepHeader stage="pantry" onBack={() => setStage("kitchen")} />
         <p className="badge badge-accent" style={{ display: "inline-flex", marginBottom: 14 }}>
-          One last thing
+          Last step
         </p>
         <h1 className="page-title">What food is around?</h1>
         <p className="page-sub">
-          Don&apos;t catalogue it. Just ramble about your fridge, cupboards, freezer, spices—whatever comes to mind.
+          Don&apos;t catalogue it. Just ramble about your fridge, cupboards, freezer, spices —
+          whatever comes to mind. Ember sorts it out.
         </p>
 
         {!pantryItems ? (
@@ -144,7 +208,7 @@ export default function OnboardingPage() {
                 />
                 <span style={{ color: "var(--text-dim)", fontSize: "0.84rem" }}>
                   <Mic size={14} style={{ verticalAlign: "-2px", marginRight: 5 }} />
-                  Hold the mic and talk naturally
+                  Tap the mic, talk naturally, tap again when done
                 </span>
               </div>
             </div>
@@ -163,7 +227,7 @@ export default function OnboardingPage() {
               )}
             </button>
             <button className="btn btn-ghost btn-full" style={{ marginTop: 10 }} onClick={() => router.push("/")}>
-              Skip for now
+              Skip — I&apos;ll add food later
             </button>
           </>
         ) : (
@@ -209,21 +273,19 @@ export default function OnboardingPage() {
     );
   }
 
+  // ─── Step 2: kitchen — equipment + skill ───
   return (
-    <main className="page fade-in" style={{ paddingTop: 40 }}>
+    <main className="page fade-in" style={{ paddingTop: 24 }}>
+      <StepHeader stage="kitchen" onBack={() => setStage("welcome")} />
       <h1 className="page-title">Your kitchen</h1>
-      <p className="page-sub">Ember tailors every recipe to what you actually have.</p>
+      <p className="page-sub">
+        So Ember never suggests a recipe you don&apos;t have the gear or the skills for.
+      </p>
 
-      <label style={{ fontSize: "0.85rem", color: "var(--text-dim)" }}>What should we call you?</label>
-      <input
-        className="input"
-        placeholder="Your name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        style={{ margin: "6px 0 22px" }}
-      />
-
-      <h3 style={{ marginBottom: 10 }}>Equipment</h3>
+      <h3 style={{ marginBottom: 4 }}>Equipment</h3>
+      <p style={{ color: "var(--text-dim)", fontSize: "0.84rem", marginBottom: 10 }}>
+        Tap everything you&apos;ve got.
+      </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 26 }}>
         {EQUIPMENT_OPTIONS.map((item) => (
           <button key={item} className={`chip ${equipment.has(item) ? "selected" : ""}`} onClick={() => toggle(item)}>
@@ -254,7 +316,7 @@ export default function OnboardingPage() {
       {error && <p style={{ color: "var(--red-warn)", fontSize: "0.9rem", marginBottom: 12 }}>{error}</p>}
 
       <button className="btn btn-primary btn-full" onClick={saveKitchen} disabled={busy}>
-        {busy ? <span className="spinner" /> : <>Next: tell Ember what&apos;s around <ArrowRight /></>}
+        {busy ? <span className="spinner" /> : <>Next: what&apos;s in your pantry <ArrowRight /></>}
       </button>
     </main>
   );

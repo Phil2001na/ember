@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import {
+  Activity,
   ArrowLeft,
   ArrowRight,
   Bookmark,
@@ -30,6 +31,7 @@ import ChatDrawer from "@/components/ChatDrawer";
 import PushToTalk from "@/components/PushToTalk";
 import { useCookTimers } from "@/lib/useCookTimers";
 import { shareSavedRecipe } from "@/lib/shareRecipe";
+import { buildFitnessReturnUrl, inferMealOutcome } from "@/lib/fitnessHandoff";
 
 export default function CookClient({
   sessionId,
@@ -61,6 +63,15 @@ export default function CookClient({
   const [usedUpChecking, setUsedUpChecking] = useState(false);
   const [deselected, setDeselected] = useState<Set<string>>(new Set());
   const [pantryUpdated, setPantryUpdated] = useState(false);
+  const [fitnessRequestId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      return localStorage.getItem(`ember-fitness-request-${sessionId}`);
+    } catch {
+      return null;
+    }
+  });
+  const [fitnessSent, setFitnessSent] = useState(false);
   const speakRepliesRef = useRef(speakReplies);
   speakRepliesRef.current = speakReplies;
   const spokenIds = useRef<Set<string>>(new Set(initialMessages.map((m) => m.id)));
@@ -68,6 +79,17 @@ export default function CookClient({
   const stepRef = useRef(stepIdx);
   stepRef.current = stepIdx;
   const cookTimers = useCookTimers(`ember-timers-${sessionId}`, `/cook/${sessionId}`);
+
+  function sendMealOutcome() {
+    if (!fitnessRequestId) return;
+    const url = buildFitnessReturnUrl(inferMealOutcome(recipe, fitnessRequestId));
+    if (!url) return;
+    setFitnessSent(true);
+    try {
+      localStorage.removeItem(`ember-fitness-request-${sessionId}`);
+    } catch {}
+    window.location.href = url;
+  }
 
   const { messages, sendMessage, status } = useChat({
     messages: initialMessages,
@@ -317,6 +339,24 @@ export default function CookClient({
           <p style={{ color: "var(--text-faint)", fontSize: "0.85rem", marginBottom: 20, display: "flex", gap: 6, justifyContent: "center", alignItems: "center" }}>
             <Check size={15} style={{ color: "var(--green-ok)" }} /> Pantry sorted.
           </p>
+        )}
+
+        {fitnessRequestId && process.env.NEXT_PUBLIC_FITNESS_URL && (
+          <button
+            className="card row-card fade-in"
+            style={{ marginBottom: 16, opacity: fitnessSent ? 0.75 : undefined }}
+            onClick={sendMealOutcome}
+            disabled={fitnessSent}
+          >
+            <span className="row-card-icon" style={fitnessSent ? { borderColor: "var(--green-ok)", color: "var(--green-ok)" } : undefined}>
+              <Activity />
+            </span>
+            <div style={{ flex: 1 }}>
+              <h3>{fitnessSent ? "Sent to Fitness" : "I ate this"}</h3>
+              <p>{fitnessSent ? "Heading back over now" : "Let Fitness know without leaving details behind"}</p>
+            </div>
+            {!fitnessSent && <ChevronRight size={19} style={{ color: "var(--text-faint)" }} />}
+          </button>
         )}
 
         <button

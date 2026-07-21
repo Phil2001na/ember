@@ -2,6 +2,28 @@
 
 ## 2026-07-21
 
+### 18:56 — Fitness handoff integration
+- Added a versioned, privacy-preserving Fitness → Ember route that validates nutrition intent,
+  reuses pantry-aware suggestions, and always offers a normal Ember escape hatch.
+- Added the cook-completion return handoff behind `NEXT_PUBLIC_FITNESS_URL`, carrying only a
+  request ID and coarse meal outcome through local session state; documented the frozen V1 contract.
+
+### 18:39 — Onboarding polish, tap-to-talk mic, multi-user DB verified
+- Onboarding is now a 3-step flow with progress dots: a warm welcome step
+  (what Ember is + name), then kitchen (equipment + skill), then the pantry
+  ramble — with back navigation, benefit-oriented copy, and a "takes about
+  a minute" promise. Grounded in onboarding research: fast time-to-value,
+  endowed progress, personalization before commitment.
+- Ramble/mic button (`PushToTalk`) changed from press-and-hold to
+  tap-to-start / tap-to-stop (hold was unreliable on web). Recording state
+  shows a stop square + pulsing red ring; 60s auto-stop safety net. Applies
+  everywhere: onboarding, home chat, mid-cook chat.
+- Applied the two missing migrations to the live Supabase project
+  (`ember.planned_meals`, `ember.recipe_shares` — planned meals and recipe
+  share links were broken in prod without them). Verified every `ember`
+  table has owner-only RLS, so each user (anonymous or email-linked) has
+  their own pantry, recipes, shopping list and sessions.
+
 ### 14:19 — Identify a dish from a photo (e.g. a TikTok screenshot)
 - "Planning to cook something?" gets a camera button next to the text
   input: upload a photo of a dish (a screenshot from a video, a plated

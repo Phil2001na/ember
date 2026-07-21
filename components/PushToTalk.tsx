@@ -1,9 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Mic } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Mic, Square } from "lucide-react";
 
 type State = "idle" | "recording" | "transcribing";
+
+/** Safety net: stop a forgotten recording rather than uploading minutes of audio. */
+const MAX_RECORDING_MS = 60_000;
 
 export default function PushToTalk({
   onTranscript,
@@ -15,6 +18,14 @@ export default function PushToTalk({
   const [state, setState] = useState<State>("idle");
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const autoStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (autoStopRef.current) clearTimeout(autoStopRef.current);
+      if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+    };
+  }, []);
 
   async function start() {
     if (state !== "idle" || disabled) return;
@@ -50,6 +61,7 @@ export default function PushToTalk({
       recorderRef.current = recorder;
       recorder.start();
       setState("recording");
+      autoStopRef.current = setTimeout(stop, MAX_RECORDING_MS);
       try {
         navigator.vibrate?.(30);
       } catch {}
@@ -59,27 +71,29 @@ export default function PushToTalk({
   }
 
   function stop() {
+    if (autoStopRef.current) {
+      clearTimeout(autoStopRef.current);
+      autoStopRef.current = null;
+    }
     if (recorderRef.current?.state === "recording") {
       recorderRef.current.stop();
+      try {
+        navigator.vibrate?.(20);
+      } catch {}
     }
   }
+
+  const recording = state === "recording";
 
   return (
     <button
       type="button"
-      className={`composer-btn ${state === "recording" ? "" : "composer-btn-ghost"}`}
+      className={`composer-btn ${recording ? "rec-live" : "composer-btn-ghost"}`}
       disabled={disabled || state === "transcribing"}
-      onPointerDown={(e) => {
-        e.preventDefault();
-        start();
-      }}
-      onPointerUp={stop}
-      onPointerLeave={stop}
-      onPointerCancel={stop}
+      onClick={recording ? stop : start}
       style={{
-        touchAction: "none",
         transition: "background 0.15s, box-shadow 0.15s",
-        ...(state === "recording"
+        ...(recording
           ? {
               background: "linear-gradient(180deg, #ef7263, var(--red-warn) 45%, #c74534)",
               boxShadow:
@@ -87,9 +101,15 @@ export default function PushToTalk({
             }
           : {}),
       }}
-      aria-label="Hold to talk"
+      aria-label={recording ? "Stop recording" : "Start talking"}
     >
-      {state === "transcribing" ? <span className="spinner" style={{ width: 16, height: 16 }} /> : <Mic size={19} />}
+      {state === "transcribing" ? (
+        <span className="spinner" style={{ width: 16, height: 16 }} />
+      ) : recording ? (
+        <Square size={15} fill="currentColor" />
+      ) : (
+        <Mic size={19} />
+      )}
     </button>
   );
 }

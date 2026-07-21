@@ -890,6 +890,55 @@ input, textarea, select { font: inherit; font-size: 16px; }
   scroll-snap-align: center;
 }
 
+/* mic button while recording — soft red pulse so "tap again to stop" is obvious */
+.rec-live { animation: recPulse 1.4s ease-out infinite; }
+@keyframes recPulse {
+  0%, 100% { outline: 4px solid rgba(226, 96, 79, 0.35); outline-offset: 0; }
+  50% { outline: 4px solid rgba(226, 96, 79, 0); outline-offset: 6px; }
+}
+
+/* ─── onboarding ─── */
+
+.progress-dots {
+  display: flex;
+  gap: 6px;
+}
+.progress-dots i {
+  width: 26px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  transition: background 0.25s;
+}
+.progress-dots i.on {
+  background: linear-gradient(90deg, var(--ember-500), var(--ember-400));
+  box-shadow: 0 0 8px rgba(240, 118, 43, 0.5);
+}
+
+/* welcome-screen ember mark — glowing coal */
+.onboard-mark {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ember-400);
+  background: radial-gradient(circle at 50% 38%, rgba(240, 118, 43, 0.28), rgba(240, 118, 43, 0.06) 70%);
+  border: 1px solid rgba(246, 143, 77, 0.35);
+  box-shadow: var(--glass-hi), 0 0 32px -4px rgba(240, 118, 43, 0.55);
+  animation: markGlow 3s ease-in-out infinite;
+}
+.onboard-mark svg { width: 30px; height: 30px; }
+@keyframes markGlow {
+  0%, 100% { box-shadow: var(--glass-hi), 0 0 32px -4px rgba(240, 118, 43, 0.55); }
+  50% { box-shadow: var(--glass-hi), 0 0 44px -2px rgba(240, 118, 43, 0.8); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rec-live, .onboard-mark { animation: none; }
+}
+
 .fade-in { animation: fadeIn 0.25s ease-out; }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
