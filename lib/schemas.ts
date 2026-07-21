@@ -15,6 +15,21 @@ export const VisionResultSchema = z.object({
 });
 export type VisionResult = z.infer<typeof VisionResultSchema>;
 
+/* ─── Dish recognition (Gemini) — "what is this from the video I saw" ─── */
+
+export const DishRecognizeSchema = z.object({
+  dish: z
+    .string()
+    .describe("Best-guess specific dish name, e.g. 'birria tacos', not just 'tacos'"),
+  description: z
+    .string()
+    .describe("One short sentence on what's visible that led to this guess"),
+  confident: z
+    .boolean()
+    .describe("false if the photo is ambiguous or the dish can't be identified with any real confidence"),
+});
+export type DishRecognize = z.infer<typeof DishRecognizeSchema>;
+
 /* ─── Suggestions (Claude) ─── */
 
 export const SuggestionSchema = z.object({
