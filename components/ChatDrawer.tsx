@@ -52,7 +52,7 @@ export default function ChatDrawer({
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 18px 8px" }}>
           <h3 style={{ fontSize: "1.05rem", display: "flex", alignItems: "center", gap: 8 }}>
-            Ask Ember <Flame size={17} style={{ color: "var(--ember-400)" }} />
+            Ask Ember <Flame size={17} style={{ color: "var(--accent-icon)" }} />
           </h3>
           <button className="icon-btn" onClick={onClose} aria-label="Close">
             <X size={18} />

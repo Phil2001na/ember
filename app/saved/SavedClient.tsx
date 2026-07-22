@@ -106,7 +106,7 @@ export default function SavedClient({ initialRecipes }: { initialRecipes: SavedR
             <button
               onClick={() => share(r)}
               disabled={sharingId === r.id}
-              style={{ color: "var(--ember-400)", padding: "4px 8px", display: "inline-flex" }}
+              style={{ color: "var(--accent-icon)", padding: "4px 8px", display: "inline-flex" }}
               aria-label={`Share ${r.recipe.title}`}
             >
               {sharingId === r.id ? <span className="spinner" style={{ width: 17, height: 17 }} /> : <Share2 size={17} />}

@@ -1,7 +1,20 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Outfit } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import SwRegister from "./sw-register";
+import { ThemeProvider } from "@/components/ThemeProvider";
+
+const THEME_INIT_SCRIPT = `
+(function () {
+  try {
+    var theme = localStorage.getItem("ember-theme");
+    if (theme === "light" || theme === "dark") {
+      document.documentElement.dataset.theme = theme;
+    }
+  } catch (e) {}
+})();
+`;
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -38,9 +51,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${outfit.variable}`}>
+    <html lang="en" className={`${fraunces.variable} ${outfit.variable}`} suppressHydrationWarning>
+      <head>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {THEME_INIT_SCRIPT}
+        </Script>
+      </head>
       <body>
-        <div className="shell">{children}</div>
+        <ThemeProvider>
+          <div className="shell">{children}</div>
+        </ThemeProvider>
         <SwRegister />
       </body>
     </html>

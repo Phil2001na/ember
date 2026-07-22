@@ -109,7 +109,7 @@ export default function FromFitnessClient({
   if (!intent) {
     return (
       <main className="page fade-in" style={{ display: "flex", flexDirection: "column", justifyContent: "center", minHeight: "100dvh", textAlign: "center" }}>
-        <Activity size={36} style={{ color: "var(--ember-400)", margin: "0 auto 14px" }} />
+        <Activity size={36} style={{ color: "var(--accent-icon)", margin: "0 auto 14px" }} />
         <h1 style={{ fontSize: "1.5rem", marginBottom: 8 }}>Couldn&rsquo;t read that handoff</h1>
         <p style={{ color: "var(--text-dim)", fontSize: "0.9rem", marginBottom: 22 }}>
           {errorReason === "unsupported-version"
@@ -129,7 +129,7 @@ export default function FromFitnessClient({
       <main className="page fade-in">
         {!recipe ? (
           <div style={{ textAlign: "center", padding: "80px 0", color: "var(--text-dim)" }}>
-            <span className="spinner" style={{ width: 32, height: 32, margin: "0 auto 16px", display: "block", color: "var(--ember-400)" }} />
+            <span className="spinner" style={{ width: 32, height: 32, margin: "0 auto 16px", display: "block", color: "var(--accent-icon)" }} />
             Writing your {picked.title} recipe…
           </div>
         ) : (
@@ -151,7 +151,7 @@ export default function FromFitnessClient({
   return (
     <main className="page fade-in">
       <h1 className="page-title title-glow" style={{ fontSize: "1.35rem", marginBottom: 6, display: "flex", alignItems: "center", gap: 8 }}>
-        {describeIntent(intent)} <Flame size={20} style={{ color: "var(--ember-400)", flexShrink: 0 }} />
+        {describeIntent(intent)} <Flame size={20} style={{ color: "var(--accent-icon)", flexShrink: 0 }} />
       </h1>
       <p style={{ color: "var(--text-faint)", fontSize: "0.82rem", marginBottom: 20 }}>
         Here&rsquo;s what that could look like with what you&rsquo;ve got — pick one, tweak it, or ignore it entirely.
@@ -159,7 +159,7 @@ export default function FromFitnessClient({
 
       {loading && (
         <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text-dim)" }}>
-          <span className="spinner" style={{ width: 28, height: 28, margin: "0 auto 14px", display: "block", color: "var(--ember-400)" }} />
+          <span className="spinner" style={{ width: 28, height: 28, margin: "0 auto 14px", display: "block", color: "var(--accent-icon)" }} />
           Thinking about it…
         </div>
       )}

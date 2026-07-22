@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookMarked, ChevronRight } from "lucide-react";
+import { BookMarked, ChevronRight, Settings } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import TabBar from "@/components/TabBar";
 import AccountCard from "./AccountCard";
@@ -49,11 +49,22 @@ export default async function ProfilePage() {
           style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
         >
           <span style={{ display: "inline-flex", alignItems: "center", gap: 9 }}>
-            <BookMarked size={17} style={{ color: "var(--ember-400)" }} /> Saved recipes
+            <BookMarked size={17} style={{ color: "var(--accent-icon)" }} /> Saved recipes
           </span>
           <span style={{ color: "var(--text-faint)", display: "inline-flex", alignItems: "center", gap: 4 }}>
             {savedCount ?? 0} <ChevronRight size={16} />
           </span>
+        </Link>
+
+        <Link
+          href="/settings"
+          className="card"
+          style={{ marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}
+        >
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 9 }}>
+            <Settings size={17} style={{ color: "var(--accent-icon)" }} /> Settings
+          </span>
+          <ChevronRight size={16} style={{ color: "var(--text-faint)" }} />
         </Link>
 
         <AccountCard

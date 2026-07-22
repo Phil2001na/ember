@@ -520,7 +520,7 @@ export default function ShoppingClient({
       {/* Planning to cook — "I want to make X" drafts the list from a real dish */}
       <div className="card" style={{ marginBottom: 16, padding: "14px" }}>
         <p style={{ fontSize: "0.9rem", marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
-          <ChefHat size={16} style={{ color: "var(--ember-400)", flexShrink: 0 }} /> Planning to cook something?
+          <ChefHat size={16} style={{ color: "var(--accent-icon)", flexShrink: 0 }} /> Planning to cook something?
         </p>
         <p style={{ color: "var(--text-faint)", fontSize: "0.78rem", marginBottom: 8 }}>
           Type it, or upload a screenshot of something you saw and want to make.
@@ -687,7 +687,7 @@ export default function ShoppingClient({
       {suggestions && (
         <div className="card fade-in" style={{ marginBottom: 16, padding: "14px" }}>
           <p style={{ fontSize: "0.9rem", marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
-            <Sparkles size={16} style={{ color: "var(--ember-400)", flexShrink: 0 }} />
+            <Sparkles size={16} style={{ color: "var(--accent-icon)", flexShrink: 0 }} />
             {suggestions.some((item) => item.priority === "unlock")
               ? "One item away"
               : "Based on your pantry, Ember suggests"}
@@ -728,7 +728,7 @@ export default function ShoppingClient({
                       {s.reason}
                     </div>
                     {s.unlock_dishes.length > 0 && (
-                      <div style={{ color: "var(--ember-300)", fontSize: "0.78rem", marginTop: 3 }}>
+                      <div style={{ color: "var(--accent-icon-soft)", fontSize: "0.78rem", marginTop: 3 }}>
                         Unlocks {s.unlock_dishes.join(" · ")}
                       </div>
                     )}
@@ -792,10 +792,10 @@ export default function ShoppingClient({
       {pantryWarn && (
         <div
           className="card fade-in"
-          style={{ marginBottom: 16, borderColor: "var(--amber-400)" }}
+          style={{ marginBottom: 16, borderColor: "var(--accent-amber)" }}
         >
           <p style={{ fontSize: "0.9rem", marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
-            <ShoppingBasket size={16} style={{ color: "var(--amber-300)", flexShrink: 0 }} />
+            <ShoppingBasket size={16} style={{ color: "var(--accent-amber)", flexShrink: 0 }} />
             <span>
               You&apos;ve already got <strong>{pantryWarn}</strong> in your pantry.
             </span>
