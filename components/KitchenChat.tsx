@@ -12,6 +12,7 @@ import RecipePreview from "@/components/RecipePreview";
 import SuggestionCarousel from "@/components/SuggestionCarousel";
 import PantrySheet from "@/components/PantrySheet";
 import PushToTalk from "@/components/PushToTalk";
+import ThemeAnnouncement from "@/components/ThemeAnnouncement";
 import type { HomeNudge } from "@/lib/homeNudge";
 
 function messageText(m: UIMessage): string {
@@ -213,6 +214,8 @@ export default function KitchenChat({
           </Link>
         )}
       </div>
+
+      <ThemeAnnouncement />
 
       {pantryEmpty && (
         <div style={{ padding: "0 18px 10px" }}>

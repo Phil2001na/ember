@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Flame, Mic, Sparkles } from "lucide-react";
 import PushToTalk from "@/components/PushToTalk";
+import ThemeToggle from "@/components/ThemeToggle";
 import { createClient } from "@/lib/supabase/client";
 import { EQUIPMENT_OPTIONS, type PantryImport } from "@/lib/schemas";
 
@@ -148,6 +149,14 @@ export default function OnboardingPage() {
         <p className="page-sub" style={{ fontSize: "1rem", marginBottom: 28 }}>
           A cooking companion that knows <em>your</em> kitchen. Tell it what you&apos;ve got,
           and it works out what to cook — then talks you through it, step by step.
+        </p>
+
+        <p style={{ fontSize: "0.85rem", color: "var(--text-dim)", marginBottom: 8 }}>
+          How should Ember look?
+        </p>
+        <ThemeToggle />
+        <p style={{ color: "var(--text-faint)", fontSize: "0.78rem", marginTop: 8, marginBottom: 28 }}>
+          You can switch anytime in Settings.
         </p>
 
         <label htmlFor="onboard-name" style={{ fontSize: "0.85rem", color: "var(--text-dim)" }}>

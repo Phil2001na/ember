@@ -18,6 +18,10 @@
 - New `/settings` page (linked from Profile) with an "Appearance" section
   housing the Dark/Light `ThemeToggle` segmented control. Dark stays the
   default for new sessions.
+- One-time `ThemeAnnouncement` banner on the home screen (dismissible,
+  `ember-theme-announced` flag) tells existing users about the new light
+  mode and links to Settings. Onboarding's welcome step now surfaces the
+  same `ThemeToggle` directly, so new users can pick a look right away.
 
 ## 2026-07-21
 
