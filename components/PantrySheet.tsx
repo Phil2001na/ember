@@ -62,7 +62,7 @@ export default function PantrySheet({
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 18px 4px" }}>
           <h3 style={{ fontSize: "1.05rem", display: "flex", alignItems: "center", gap: 8 }}>
-            Your pantry <ShoppingBasket size={17} style={{ color: "var(--ember-400)" }} />
+            Your pantry <ShoppingBasket size={17} style={{ color: "var(--accent-icon)" }} />
           </h3>
           <button className="icon-btn" onClick={onClose} aria-label="Close">
             <X size={18} />
@@ -70,7 +70,7 @@ export default function PantrySheet({
         </div>
         <p style={{ color: "var(--text-dim)", fontSize: "0.82rem", padding: "0 18px 10px" }}>
           Tap anything you don&apos;t actually have.{" "}
-          <Link href="/pantry" style={{ color: "var(--ember-300)", textDecoration: "underline" }}>
+          <Link href="/pantry" style={{ color: "var(--accent-icon-soft)", textDecoration: "underline" }}>
             Full pantry &amp; camera scan
           </Link>
         </p>

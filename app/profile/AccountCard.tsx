@@ -27,7 +27,7 @@ export default function AccountCard({ email, isAnonymous, emailConfirmed }: Prop
     return (
       <div className="card" style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
         <p style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-          <Mail size={16} style={{ color: "var(--ember-400)" }} /> {email}
+          <Mail size={16} style={{ color: "var(--accent-icon)" }} /> {email}
         </p>
         <p style={{ color: "var(--text-dim)", fontSize: "0.85rem" }}>
           Your kitchen is saved to this account. Sign in with it on any device.
@@ -50,7 +50,7 @@ export default function AccountCard({ email, isAnonymous, emailConfirmed }: Prop
     return (
       <div className="card" style={{ marginTop: 12 }}>
         <p style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-          <Mail size={16} style={{ color: "var(--amber-400)" }} /> {email}
+          <Mail size={16} style={{ color: "var(--accent-amber)" }} /> {email}
         </p>
         <p style={{ color: "var(--text-dim)", fontSize: "0.85rem", marginTop: 6 }}>
           Check your inbox and tap the confirmation link to finish saving your

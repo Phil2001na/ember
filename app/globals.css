@@ -41,6 +41,22 @@
   --accent: var(--ember-500);
   --accent-soft: rgba(240, 118, 43, 0.15);
 
+  /* icon/label tints — separate from the raw palette above because those
+     also feed button gradients, which must stay bright regardless of theme */
+  --accent-icon: var(--ember-400);
+  --accent-icon-soft: var(--ember-300);
+  --accent-amber: var(--amber-300);
+
+  /* glass chrome — frosted bars/sheets/inputs that need a dark literal in
+     dark mode and a light literal in light mode, not just a translucent tint */
+  --glass-bg: rgba(23, 19, 14, 0.78);
+  --glass-bg-soft: rgba(23, 19, 14, 0.72);
+  --sheet-bg: linear-gradient(180deg, rgba(35, 29, 22, 0.92), rgba(23, 19, 14, 0.94));
+  --sheet-handle: rgba(255, 244, 230, 0.18);
+  --input-bg: rgba(10, 8, 6, 0.45);
+  --skeleton-bg: rgba(255, 244, 230, 0.07);
+  --skeleton-shimmer: rgba(255, 244, 230, 0.1);
+
   /* glass recipe pieces */
   --glass-hi: inset 0 1px 0 rgba(255, 255, 255, 0.09);
   --glass-lo: inset 0 -1px 0 rgba(0, 0, 0, 0.25);
@@ -54,6 +70,33 @@
   --font-ui: var(--font-outfit), system-ui, sans-serif;
 }
 
+/* ─── light mode — same brand system, cream-and-charcoal instead of
+   charcoal-and-cream. Structure, spacing and shadows are untouched;
+   only color tokens flip. ─── */
+:root[data-theme="light"] {
+  --bg: #f7efe1;
+  --surface-3: rgba(40, 28, 16, 0.1);
+  --border: rgba(40, 28, 16, 0.12);
+  --border-strong: rgba(40, 28, 16, 0.22);
+  --text: #2a1f15;
+  --text-dim: #6b5c4c;
+  --text-faint: #93826d;
+
+  /* deeper, saturated variants of the icon/label tints so they hold
+     contrast on a light page instead of washing out */
+  --accent-icon: #c1490f;
+  --accent-icon-soft: #a8420e;
+  --accent-amber: #8a5c08;
+
+  --glass-bg: rgba(247, 239, 227, 0.82);
+  --glass-bg-soft: rgba(247, 239, 227, 0.75);
+  --sheet-bg: linear-gradient(180deg, rgba(255, 251, 244, 0.95), rgba(247, 239, 227, 0.96));
+  --sheet-handle: rgba(40, 28, 16, 0.18);
+  --input-bg: rgba(255, 255, 255, 0.55);
+  --skeleton-bg: rgba(40, 28, 16, 0.06);
+  --skeleton-shimmer: rgba(255, 255, 255, 0.5);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -64,6 +107,10 @@
 html {
   color-scheme: dark;
   background: var(--bg);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 body {
@@ -135,7 +182,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
 .page-title {
   font-size: 1.7rem;
   margin-bottom: 4px;
-  background: linear-gradient(115deg, var(--cream) 55%, var(--cream-dim));
+  background: linear-gradient(115deg, var(--text) 55%, var(--text-dim));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -143,7 +190,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
 
 /* the loud one — home greeting, finish screens */
 .title-glow {
-  background: linear-gradient(115deg, var(--cream) 30%, var(--amber-300) 60%, var(--ember-400));
+  background: linear-gradient(115deg, var(--text) 30%, var(--accent-amber) 60%, var(--accent-icon));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -168,7 +215,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
   justify-content: space-between;
   padding: 9px 10px 8px;
   border-radius: 24px;
-  background: rgba(23, 19, 14, 0.78);
+  background: var(--glass-bg);
   backdrop-filter: blur(20px) saturate(1.4);
   -webkit-backdrop-filter: blur(20px) saturate(1.4);
   border: 1px solid var(--border);
@@ -192,7 +239,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
 }
 
 .tabbar a.active {
-  color: var(--ember-400);
+  color: var(--accent-icon);
 }
 
 .tabbar a svg { width: 21px; height: 21px; }
@@ -217,7 +264,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
   overflow-x: auto;
   padding: 6px;
   border-radius: 999px;
-  background: rgba(23, 19, 14, 0.78);
+  background: var(--glass-bg);
   backdrop-filter: blur(20px) saturate(1.4);
   -webkit-backdrop-filter: blur(20px) saturate(1.4);
   border: 1px solid var(--border);
@@ -440,7 +487,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--ember-400);
+  color: var(--accent-icon);
   margin-bottom: 10px;
 }
 .step-card-top {
@@ -471,7 +518,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
   gap: 7px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--amber-300);
+  color: var(--accent-amber);
   margin-bottom: 5px;
 }
 .step-card-detail p { font-size: 0.9rem; color: var(--text-dim); line-height: 1.55; }
@@ -479,7 +526,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
 .step-card-controls .btn { width: 100%; white-space: nowrap; }
 
 .step-watch { margin-top: 22px; }
-.step-watch-badge { margin-bottom: 12px; display: inline-flex; align-items: center; gap: 6px; color: var(--amber-300); }
+.step-watch-badge { margin-bottom: 12px; display: inline-flex; align-items: center; gap: 6px; color: var(--accent-amber); }
 .step-watch-text { color: var(--text-dim); font-size: 1rem; line-height: 1.65; }
 
 /* circular heat gauge */
@@ -563,7 +610,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
 
 .input {
   width: 100%;
-  background: rgba(10, 8, 6, 0.45);
+  background: var(--input-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 13px 14px;
@@ -594,7 +641,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
 .chip.selected {
   background: linear-gradient(180deg, rgba(240, 118, 43, 0.26), rgba(240, 118, 43, 0.12));
   border-color: rgba(246, 143, 77, 0.5);
-  color: var(--ember-300);
+  color: var(--accent-icon-soft);
   box-shadow: inset 0 1px 0 rgba(255, 200, 150, 0.2), 0 4px 14px -6px rgba(240, 118, 43, 0.4);
 }
 
@@ -610,16 +657,16 @@ input, textarea, select { font: inherit; font-size: 16px; }
   border: 1px solid transparent;
 }
 .badge-ok { background: rgba(127, 176, 105, 0.13); color: var(--green-ok); border-color: rgba(127, 176, 105, 0.25); }
-.badge-warn { background: rgba(245, 185, 66, 0.12); color: var(--amber-300); border-color: rgba(245, 185, 66, 0.22); }
-.badge-accent { background: var(--accent-soft); color: var(--ember-300); border-color: rgba(240, 118, 43, 0.3); }
-.badge-outline { background: transparent; color: var(--ember-300); border-color: rgba(240, 118, 43, 0.35); padding: 5px 13px; }
+.badge-warn { background: rgba(245, 185, 66, 0.12); color: var(--accent-amber); border-color: rgba(245, 185, 66, 0.22); }
+.badge-accent { background: var(--accent-soft); color: var(--accent-icon-soft); border-color: rgba(240, 118, 43, 0.3); }
+.badge-outline { background: transparent; color: var(--accent-icon-soft); border-color: rgba(240, 118, 43, 0.35); padding: 5px 13px; }
 
 .badge svg { width: 13px; height: 13px; }
 
 /* serif italic gradient accent inside display headings — "You *made it*." */
 .accent-serif {
   font-style: italic;
-  background: linear-gradient(115deg, var(--ember-300), var(--amber-300));
+  background: linear-gradient(115deg, var(--accent-icon-soft), var(--accent-amber));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -636,7 +683,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
   font-weight: 600;
   letter-spacing: 0;
 }
-.section-head svg { width: 19px; height: 19px; color: var(--ember-400); }
+.section-head svg { width: 19px; height: 19px; color: var(--accent-icon); }
 
 /* card holding a stack of divided rows (ingredient list, settings-style rows) */
 .list-card { padding: 4px 16px; }
@@ -653,7 +700,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--ember-400);
+  background: var(--accent-icon);
   flex-shrink: 0;
 }
 
@@ -672,7 +719,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
   color: var(--text-dim);
   line-height: 1.25;
 }
-.equip-tile svg { width: 17px; height: 17px; color: var(--cream-dim); flex-shrink: 0; }
+.equip-tile svg { width: 17px; height: 17px; color: var(--text-dim); flex-shrink: 0; }
 
 /* round icon-only button */
 .icon-btn {
@@ -703,8 +750,8 @@ input, textarea, select { font: inherit; font-size: 16px; }
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid var(--ember-400);
-  color: var(--ember-400);
+  border: 1.5px solid var(--accent-icon);
+  color: var(--accent-icon);
   flex-shrink: 0;
 }
 .row-card .row-card-icon svg { width: 20px; height: 20px; }
@@ -725,7 +772,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
 .skeleton {
   position: relative;
   overflow: hidden;
-  background: rgba(255, 244, 230, 0.07);
+  background: var(--skeleton-bg);
   border-radius: 6px;
 }
 .skeleton::after {
@@ -736,12 +783,42 @@ input, textarea, select { font: inherit; font-size: 16px; }
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 244, 230, 0.1),
+    var(--skeleton-shimmer),
     transparent
   );
   animation: shimmer 1.6s ease-in-out infinite;
 }
 @keyframes shimmer { 100% { transform: translateX(100%); } }
+
+/* ─── appearance switch (settings) ─── */
+
+.theme-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.theme-toggle-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px 14px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  transition: background 0.15s, color 0.15s;
+}
+.theme-toggle-btn svg { width: 16px; height: 16px; }
+.theme-toggle-btn.active {
+  background: linear-gradient(180deg, rgba(240, 118, 43, 0.26), rgba(240, 118, 43, 0.12));
+  color: var(--accent-icon-soft);
+  box-shadow: var(--glass-hi);
+}
 
 /* ─── bottom sheets (pantry peek, mid-cook chat) ─── */
 
@@ -760,7 +837,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
 
 .sheet {
   position: relative;
-  background: linear-gradient(180deg, rgba(35, 29, 22, 0.92), rgba(23, 19, 14, 0.94));
+  background: var(--sheet-bg);
   backdrop-filter: blur(24px) saturate(1.3);
   -webkit-backdrop-filter: blur(24px) saturate(1.3);
   border-radius: 24px 24px 0 0;
@@ -785,7 +862,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
   width: 36px;
   height: 4px;
   border-radius: 999px;
-  background: rgba(255, 244, 230, 0.18);
+  background: var(--sheet-handle);
 }
 
 @keyframes sheetUp {
@@ -801,7 +878,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
   gap: 6px;
   padding: 6px;
   border-radius: 999px;
-  background: rgba(23, 19, 14, 0.72);
+  background: var(--glass-bg-soft);
   backdrop-filter: blur(20px) saturate(1.4);
   -webkit-backdrop-filter: blur(20px) saturate(1.4);
   border: 1px solid var(--border);
@@ -923,7 +1000,7 @@ input, textarea, select { font: inherit; font-size: 16px; }
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--ember-400);
+  color: var(--accent-icon);
   background: radial-gradient(circle at 50% 38%, rgba(240, 118, 43, 0.28), rgba(240, 118, 43, 0.06) 70%);
   border: 1px solid rgba(246, 143, 77, 0.35);
   box-shadow: var(--glass-hi), 0 0 32px -4px rgba(240, 118, 43, 0.55);

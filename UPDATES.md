@@ -1,5 +1,24 @@
 # Ember — update log
 
+## 2026-07-22
+
+### Light mode + Settings page
+- Added a cream-and-charcoal light theme alongside the existing dark default —
+  same brand system, only color tokens flip. All backgrounds, borders, and
+  text now resolve through CSS variables (`--bg`, `--text`, `--border`,
+  `--surface-3`, the frosted-glass bar/sheet/input fills, skeleton shimmer),
+  toggled by a `data-theme` attribute on `<html>`.
+- Split the icon/label accent color from the raw palette into
+  `--accent-icon` / `--accent-icon-soft` / `--accent-amber` so decorative
+  orange/amber text stays legible on a light background instead of washing
+  out, while button gradients keep their original bright tones in both themes.
+- New `ThemeProvider`/`useTheme` (localStorage-backed, `ember-theme` key) plus
+  a `beforeInteractive` script in the root layout so the stored theme applies
+  before first paint — no flash of the wrong theme on load or reload.
+- New `/settings` page (linked from Profile) with an "Appearance" section
+  housing the Dark/Light `ThemeToggle` segmented control. Dark stays the
+  default for new sessions.
+
 ## 2026-07-21
 
 ### 21:21 — Home nudge copy: drop the "tell me who" ask

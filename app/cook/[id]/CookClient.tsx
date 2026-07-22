@@ -298,7 +298,7 @@ export default function CookClient({
         {!pantryUpdated && usedUp && usedUp.length > 0 && (
           <div className="card fade-in" style={{ textAlign: "left", marginBottom: 20, borderColor: "var(--ember-500)" }}>
             <h3 style={{ fontSize: "0.95rem", marginBottom: 4, fontFamily: "var(--font-ui)", fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
-              <ShoppingBasket size={17} style={{ color: "var(--ember-400)" }} /> Pantry check
+              <ShoppingBasket size={17} style={{ color: "var(--accent-icon)" }} /> Pantry check
             </h3>
             <p style={{ color: "var(--text-dim)", fontSize: "0.82rem", marginBottom: 12 }}>
               Looks like this cook finished these off — tap any you still have.

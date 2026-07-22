@@ -52,8 +52,8 @@ export default function HeatDial({
           style={{ stroke: warm ? "var(--ember-500)" : "var(--amber-400)" }}
         />
       </svg>
-      <Icon size={22} className="heat-dial-flame" style={{ color: warm ? "var(--ember-400)" : "var(--amber-300)" }} />
-      <span className="heat-dial-label" style={{ color: warm ? "var(--ember-300)" : "var(--amber-300)" }}>
+      <Icon size={22} className="heat-dial-flame" style={{ color: warm ? "var(--accent-icon)" : "var(--accent-amber)" }} />
+      <span className="heat-dial-label" style={{ color: warm ? "var(--accent-icon-soft)" : "var(--accent-amber)" }}>
         {label}
       </span>
     </div>

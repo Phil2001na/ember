@@ -170,7 +170,7 @@ export default function KitchenChat({
       <main className="page fade-in">
         {!recipe ? (
           <div style={{ textAlign: "center", padding: "80px 0", color: "var(--text-dim)" }}>
-            <span className="spinner" style={{ width: 32, height: 32, margin: "0 auto 16px", display: "block", color: "var(--ember-400)" }} />
+            <span className="spinner" style={{ width: 32, height: 32, margin: "0 auto 16px", display: "block", color: "var(--accent-icon)" }} />
             Writing your {picked.title} recipe…
           </div>
         ) : (
@@ -205,7 +205,7 @@ export default function KitchenChat({
     >
       <div style={{ padding: "20px 18px 10px" }}>
         <h1 className="page-title title-glow" style={{ fontSize: "1.35rem", marginBottom: activeSession ? 8 : 0, display: "flex", alignItems: "center", gap: 8 }}>
-          {greeting} <Flame size={20} style={{ color: "var(--ember-400)", flexShrink: 0 }} />
+          {greeting} <Flame size={20} style={{ color: "var(--accent-icon)", flexShrink: 0 }} />
         </h1>
         {activeSession && (
           <Link href={`/cook/${activeSession.id}`} className="badge badge-accent" style={{ display: "inline-flex" }}>
@@ -243,7 +243,7 @@ export default function KitchenChat({
             }}
           >
             {nudge.text}
-            <span style={{ display: "block", color: "var(--ember-400)", marginTop: 8, fontSize: "0.8rem" }}>
+            <span style={{ display: "block", color: "var(--accent-icon)", marginTop: 8, fontSize: "0.8rem" }}>
               Try it →
             </span>
           </button>
