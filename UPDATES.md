@@ -1,5 +1,12 @@
 # Ember — update log
 
+## 2026-07-27
+
+### Notch fix — KitchenChat header
+- Fixed the home screen's greeting header (fixed-positioned, top:0) clipping under the iPhone
+  notch: it had a flat 20px top padding with no `env(safe-area-inset-top)`, unlike other
+  fixed elements in the same file (timer bar, bottom nav) which already accounted for it.
+
 ## 2026-07-22
 
 ### Light mode + Settings page

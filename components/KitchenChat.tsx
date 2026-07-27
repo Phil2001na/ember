@@ -204,7 +204,7 @@ export default function KitchenChat({
         zIndex: 60,
       }}
     >
-      <div style={{ padding: "20px 18px 10px" }}>
+      <div style={{ padding: "20px 18px 10px", paddingTop: "calc(20px + env(safe-area-inset-top))" }}>
         <h1 className="page-title title-glow" style={{ fontSize: "1.35rem", marginBottom: activeSession ? 8 : 0, display: "flex", alignItems: "center", gap: 8 }}>
           {greeting} <Flame size={20} style={{ color: "var(--accent-icon)", flexShrink: 0 }} />
         </h1>
