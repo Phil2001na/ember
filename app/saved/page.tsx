@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import TabBar from "@/components/TabBar";
 import SavedClient from "./SavedClient";
 import type { SavedRecipe } from "@/lib/schemas";
 
@@ -16,9 +15,6 @@ export default async function SavedPage() {
     .order("saved_at", { ascending: false });
 
   return (
-    <>
-      <SavedClient initialRecipes={(data ?? []) as SavedRecipe[]} />
-      <TabBar />
-    </>
+    <SavedClient initialRecipes={(data ?? []) as SavedRecipe[]} />
   );
 }

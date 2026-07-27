@@ -158,8 +158,10 @@ h1, h2, h3 {
   letter-spacing: -0.01em;
 }
 
-a { color: inherit; text-decoration: none; }
-button { font: inherit; color: inherit; cursor: pointer; background: none; border: none; }
+/* touch-action: manipulation drops the browser's wait-for-double-tap delay, so
+   taps register the moment the finger lifts */
+a { color: inherit; text-decoration: none; touch-action: manipulation; }
+button { font: inherit; color: inherit; cursor: pointer; background: none; border: none; touch-action: manipulation; }
 input, textarea, select { font: inherit; font-size: 16px; }
 
 ::selection { background: var(--accent); color: var(--char-950); }
@@ -226,23 +228,50 @@ input, textarea, select { font: inherit; font-size: 16px; }
 .tabbar a {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 6px 2px 4px;
   border-radius: 16px;
   font-size: 0.64rem;
   font-weight: 500;
   letter-spacing: 0.03em;
+}
+
+/* the tab itself — lights up on finger-down, before the router moves */
+.tab-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 2px 2px;
+  border-radius: 16px;
   color: var(--text-faint);
-  transition: color 0.18s;
+  transition: color 0.12s, background 0.16s, transform 0.14s cubic-bezier(0.2, 0.8, 0.3, 1);
 }
 
-.tabbar a.active {
-  color: var(--accent-icon);
+.tab-inner.lit { color: var(--accent-icon); }
+
+.tab-inner.held {
+  transform: scale(0.9);
+  background: var(--surface-2);
 }
 
-.tabbar a svg { width: 21px; height: 21px; }
+.tab-inner svg { width: 21px; height: 21px; }
+
+/* pending hint — reserved space, so lighting it up never nudges the bar.
+   The 120ms delay keeps it invisible when the route is already prefetched */
+.tab-hint {
+  width: 14px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0;
+}
+.tab-hint.is-pending {
+  animation: tabHint 0.9s ease-in-out 0.12s infinite;
+}
+@keyframes tabHint {
+  0%, 100% { opacity: 0.18; }
+  50% { opacity: 0.75; }
+}
 
 /* ─── floating timer bar — pinned across step navigation ─── */
 
@@ -571,6 +600,15 @@ input, textarea, select { font: inherit; font-size: 16px; }
   border-radius: var(--radius);
   padding: 16px;
   box-shadow: var(--glass-hi), 0 8px 24px -12px rgba(0, 0, 0, 0.4);
+}
+
+/* a card you can press answers the finger, not the network */
+a.card, button.card {
+  transition: transform 0.14s cubic-bezier(0.2, 0.8, 0.3, 1), border-color 0.15s;
+}
+a.card:active, button.card:active {
+  transform: scale(0.978);
+  border-color: var(--border-strong);
 }
 
 .btn {
@@ -1026,4 +1064,8 @@ input, textarea, select { font: inherit; font-size: 16px; }
   .fade-in, .sheet, .sheet-backdrop { animation: none; }
   .spinner { animation-duration: 1.2s; }
   .skeleton::after { animation: none; }
+  /* the press feedback stays — it's the point — but without the movement */
+  .tab-inner, a.card, button.card { transition: color 0.12s, background 0.16s, border-color 0.15s; }
+  .tab-inner.held, a.card:active, button.card:active { transform: none; }
+  .tab-hint.is-pending { animation: none; opacity: 0.5; }
 }

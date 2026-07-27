@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import TabBar from "@/components/TabBar";
 import PantryClient from "./PantryClient";
 import type { PantryItem } from "@/lib/schemas";
 
@@ -16,9 +15,6 @@ export default async function PantryPage() {
     .order("updated_at", { ascending: false });
 
   return (
-    <>
-      <PantryClient initialItems={(items ?? []) as PantryItem[]} userId={user!.id} />
-      <TabBar />
-    </>
+    <PantryClient initialItems={(items ?? []) as PantryItem[]} userId={user!.id} />
   );
 }

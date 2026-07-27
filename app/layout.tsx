@@ -3,6 +3,7 @@ import { Fraunces, Outfit } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import SwRegister from "./sw-register";
+import TabBar from "@/components/TabBar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 const THEME_INIT_SCRIPT = `
@@ -14,6 +15,13 @@ const THEME_INIT_SCRIPT = `
     }
   } catch (e) {}
 })();
+`;
+
+// iOS Safari only applies :active styles once the document has a touch
+// listener — this is what makes buttons and cards react on finger-down
+// instead of on release, and it runs before hydration so the first tap counts.
+const TAP_INIT_SCRIPT = `
+document.addEventListener("touchstart", function () {}, { passive: true });
 `;
 
 const fraunces = Fraunces({
@@ -56,10 +64,16 @@ export default function RootLayout({
         <Script id="theme-init" strategy="beforeInteractive">
           {THEME_INIT_SCRIPT}
         </Script>
+        <Script id="tap-init" strategy="beforeInteractive">
+          {TAP_INIT_SCRIPT}
+        </Script>
       </head>
       <body>
         <ThemeProvider>
           <div className="shell">{children}</div>
+          {/* outside the shell: the bar survives every navigation, so tapping a
+              tab never blanks the chrome */}
+          <TabBar />
         </ThemeProvider>
         <SwRegister />
       </body>

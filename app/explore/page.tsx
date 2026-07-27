@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import TabBar from "@/components/TabBar";
 import ExploreClient from "./ExploreClient";
 import type { ExploreDish } from "@/lib/schemas";
 
@@ -19,12 +18,9 @@ export default async function ExplorePage() {
   ]);
 
   return (
-    <>
-      <ExploreClient
-        dishes={(dishes ?? []).map((d) => ({ id: d.id as string, ...(d.dish as ExploreDish) }))}
-        pantry={(pantry ?? []).map((p) => p.name as string)}
-      />
-      <TabBar />
-    </>
+    <ExploreClient
+      dishes={(dishes ?? []).map((d) => ({ id: d.id as string, ...(d.dish as ExploreDish) }))}
+      pantry={(pantry ?? []).map((p) => p.name as string)}
+    />
   );
 }
