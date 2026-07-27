@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import TabBar from "@/components/TabBar";
 import KitchenChat from "@/components/KitchenChat";
 import { homeNudge } from "@/lib/homeNudge";
 
@@ -48,22 +47,19 @@ export default async function HomePage() {
   const dayKey = Number(windhoekParts.month) * 31 + Number(windhoekParts.day);
 
   return (
-    <>
-      <KitchenChat
-        greeting={`${greeting}${profile.display_name ? `, ${profile.display_name}` : ""}`}
-        pantryEmpty={!pantry?.length}
-        nudge={homeNudge(hour, pantry ?? [], dayKey)}
-        activeSession={
-          activeSession
-            ? {
-                id: activeSession.id,
-                title: (activeSession.recipe as { title?: string })?.title ?? "Your dish",
-                step: activeSession.current_step,
-              }
-            : null
-        }
-      />
-      <TabBar />
-    </>
+    <KitchenChat
+      greeting={`${greeting}${profile.display_name ? `, ${profile.display_name}` : ""}`}
+      pantryEmpty={!pantry?.length}
+      nudge={homeNudge(hour, pantry ?? [], dayKey)}
+      activeSession={
+        activeSession
+          ? {
+              id: activeSession.id,
+              title: (activeSession.recipe as { title?: string })?.title ?? "Your dish",
+              step: activeSession.current_step,
+            }
+          : null
+      }
+    />
   );
 }

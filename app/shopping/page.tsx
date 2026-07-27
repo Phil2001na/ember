@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import TabBar from "@/components/TabBar";
 import ShoppingClient from "./ShoppingClient";
 import type { PlannedMeal, ShoppingItem } from "@/lib/schemas";
 
@@ -24,14 +23,11 @@ export default async function ShoppingPage() {
   ]);
 
   return (
-    <>
-      <ShoppingClient
-        initialItems={(items ?? []) as ShoppingItem[]}
-        pantryNames={pantry?.map((p) => p.name) ?? []}
-        initialPlanned={(planned ?? []) as PlannedMeal[]}
-        userId={user!.id}
-      />
-      <TabBar />
-    </>
+    <ShoppingClient
+      initialItems={(items ?? []) as ShoppingItem[]}
+      pantryNames={pantry?.map((p) => p.name) ?? []}
+      initialPlanned={(planned ?? []) as PlannedMeal[]}
+      userId={user!.id}
+    />
   );
 }

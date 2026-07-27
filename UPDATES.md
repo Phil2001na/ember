@@ -2,6 +2,29 @@
 
 ## 2026-07-27
 
+### Instant tap feedback + route skeletons
+- Every tab route now has a `loading.tsx` skeleton (`/`, `/pantry`, `/shopping`,
+  `/explore`, `/profile`, `/saved`, plus `/cook/[id]` and `/r/[id]`). These are
+  what Next.js prefetches for dynamic routes, so a tap swaps the screen in
+  ~90ms (measured, 2.5s-throttled server) instead of leaving the old page
+  frozen until Supabase answers. Skeletons render the parts that are already
+  known — page titles, the Saved/Settings rows on Profile, the composer bar on
+  home — and shimmer only the data.
+- The tab bar moved from each page into the root layout, so it never unmounts
+  mid-navigation. It hides itself outside the tab routes, as before.
+- Tabs react on finger-down, not on route arrival: `onPointerDown` scales the
+  icon and lights it in ember, `useLinkStatus` keeps it lit while the route is
+  in flight (with a delayed pulse hint so fast navigations don't flash), and
+  Android gets a 6ms haptic tick. The press highlight is tagged with the route
+  it started on, so the real active state takes back over on arrival.
+- Pressable cards (`a.card` / `button.card`) get the same press-in scale, and
+  a `beforeInteractive` no-op touch listener makes iOS Safari honour `:active`
+  on first touch. `touch-action: manipulation` on links and buttons drops the
+  browser's wait-for-double-tap delay.
+- Home moved into an `app/(home)/` route group so it can own its loading
+  skeleton without that skeleton leaking to every other route. Same URL.
+- Reduced-motion keeps the colour feedback, drops the movement.
+
 ### Notch fix — KitchenChat header
 - Fixed the home screen's greeting header (fixed-positioned, top:0) clipping under the iPhone
   notch: it had a flat 20px top padding with no `env(safe-area-inset-top)`, unlike other
