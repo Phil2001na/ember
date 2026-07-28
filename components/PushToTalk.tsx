@@ -8,11 +8,16 @@ type State = "idle" | "recording" | "transcribing";
 /** Safety net: stop a forgotten recording rather than uploading minutes of audio. */
 const MAX_RECORDING_MS = 60_000;
 
+const FALLBACK_HINT = "Voice input isn't working right now — try the mic on your keyboard instead.";
+
 export default function PushToTalk({
   onTranscript,
+  onError,
   disabled,
 }: {
   onTranscript: (text: string) => void;
+  /** Called when recording or transcription fails, so the caller can nudge toward the keyboard's own dictation mic. */
+  onError?: (message: string) => void;
   disabled?: boolean;
 }) {
   const [state, setState] = useState<State>("idle");
@@ -53,7 +58,12 @@ export default function PushToTalk({
           if (res.ok) {
             const { text } = await res.json();
             if (text) onTranscript(text);
+            else onError?.(FALLBACK_HINT);
+          } else {
+            onError?.(FALLBACK_HINT);
           }
+        } catch {
+          onError?.(FALLBACK_HINT);
         } finally {
           setState("idle");
         }
@@ -67,6 +77,7 @@ export default function PushToTalk({
       } catch {}
     } catch {
       setState("idle");
+      onError?.("Couldn't reach the microphone — try the mic on your keyboard instead.");
     }
   }
 

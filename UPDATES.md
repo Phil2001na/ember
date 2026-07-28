@@ -1,5 +1,19 @@
 # Ember — update log
 
+## 2026-07-28
+
+### Voice mic failures now say something, instead of nothing
+- `PushToTalk` (onboarding pantry ramble, home chat, mid-cook chat) silently
+  went back to idle on any transcription failure — a dead 503 from
+  `/api/transcribe` (e.g. no `GROQ_API_KEY` configured) or a network error
+  looked identical to "did nothing." It now calls a new `onError` callback
+  with a message pointing at the fallback that always works: "try the mic
+  on your keyboard instead."
+- Wired into all three surfaces: onboarding reuses its existing error
+  banner, home chat and mid-cook chat (`ChatDrawer` gained a `notice` prop)
+  show a small line above the composer. Clears on the next successful
+  transcript.
+
 ## 2026-07-27
 
 ### Instant tap feedback + route skeletons

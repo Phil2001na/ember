@@ -87,6 +87,7 @@ export default function KitchenChat({
   const [genError, setGenError] = useState<string | null>(null);
   const [pantryOpen, setPantryOpen] = useState(false);
   const [listNotice, setListNotice] = useState<string | null>(null);
+  const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status } = useChat({
@@ -310,6 +311,12 @@ export default function KitchenChat({
         )}
       </div>
 
+      {voiceNotice && (
+        <p style={{ color: "var(--text-dim)", fontSize: "0.8rem", padding: "0 18px 6px", textAlign: "center" }}>
+          {voiceNotice}
+        </p>
+      )}
+
       <form onSubmit={submit} style={{ padding: "10px 14px" }}>
         <div className="composer">
           <button
@@ -325,7 +332,14 @@ export default function KitchenChat({
             value={input}
             onChange={(e) => setInput(e.target.value)}
           />
-          <PushToTalk disabled={busy} onTranscript={(text) => sendMessage({ text })} />
+          <PushToTalk
+            disabled={busy}
+            onTranscript={(text) => {
+              setVoiceNotice(null);
+              sendMessage({ text });
+            }}
+            onError={setVoiceNotice}
+          />
           <button className="composer-btn composer-btn-send" disabled={busy || !input.trim()} aria-label="Send">
             <ArrowUp size={19} />
           </button>

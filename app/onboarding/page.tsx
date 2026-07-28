@@ -211,9 +211,11 @@ export default function OnboardingPage() {
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <PushToTalk
                   disabled={extracting}
-                  onTranscript={(text) =>
-                    setPantryRant((current) => `${current}${current ? " " : ""}${text}`)
-                  }
+                  onTranscript={(text) => {
+                    setError(null);
+                    setPantryRant((current) => `${current}${current ? " " : ""}${text}`);
+                  }}
+                  onError={setError}
                 />
                 <span style={{ color: "var(--text-dim)", fontSize: "0.84rem" }}>
                   <Mic size={14} style={{ verticalAlign: "-2px", marginRight: 5 }} />
