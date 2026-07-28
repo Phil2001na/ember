@@ -29,6 +29,7 @@ import StepCard from "@/components/StepCard";
 import TimerBar from "@/components/TimerBar";
 import ChatDrawer from "@/components/ChatDrawer";
 import PushToTalk from "@/components/PushToTalk";
+import AddToHome from "@/components/AddToHome";
 import { useCookTimers } from "@/lib/useCookTimers";
 import { shareSavedRecipe } from "@/lib/shareRecipe";
 import { buildFitnessReturnUrl, inferMealOutcome } from "@/lib/fitnessHandoff";
@@ -392,6 +393,8 @@ export default function CookClient({
             <ChevronRight size={19} style={{ color: "var(--text-faint)" }} />
           </button>
         )}
+        <AddToHome occasionId={sessionId} />
+
         <button className="btn btn-primary btn-full" style={{ padding: "16px 20px" }} onClick={() => router.push("/")}>
           <Home /> Back home
         </button>

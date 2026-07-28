@@ -1069,3 +1069,149 @@ a.card:active, button.card:active {
   .tab-inner.held, a.card:active, button.card:active { transform: none; }
   .tab-hint.is-pending { animation: none; opacity: 0.5; }
 }
+
+/* ─── "Add to Home Screen" illustration ───────────────────────────
+   The Ember icon drops out of the browser and lands in an empty slot on a
+   little phone's home grid, which lights up ember to confirm. Pure CSS so it
+   ships no assets and re-tints itself in light mode along with everything else.
+   Geometry note: the icon is centred on the phone, then offset to the last
+   grid slot (+25px, -10px) — keep those in sync if the phone box changes. */
+
+.a2hs-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 138px;
+  margin-bottom: 4px;
+}
+
+.a2hs-phone {
+  position: relative;
+  width: 92px;
+  height: 116px;
+  padding: 12px 10px 0;
+  border: 2px solid var(--border-strong);
+  border-radius: 15px;
+  background: var(--surface);
+  box-shadow: var(--glass-hi);
+}
+
+/* speaker slit, so it reads as a phone at this size */
+.a2hs-phone::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--border-strong);
+}
+
+.a2hs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.a2hs-slot {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: var(--surface-3);
+}
+
+/* the empty slot the icon is heading for */
+.a2hs-slot.target {
+  background: transparent;
+  border: 1.5px dashed var(--border-strong);
+  animation: a2hsSlotGlow 4.2s ease-in-out infinite;
+}
+
+.a2hs-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  color: #fff;
+  background: linear-gradient(180deg, var(--ember-400), var(--ember-600));
+  box-shadow: var(--glass-hi), 0 6px 18px -4px rgba(240, 118, 43, 0.65);
+  animation: a2hsDrop 4.2s cubic-bezier(0.5, 0, 0.3, 1) infinite;
+}
+.a2hs-icon svg { width: 20px; height: 20px; }
+
+@keyframes a2hsDrop {
+  0%   { transform: translate(25px, -78px) scale(1.6); opacity: 0; }
+  10%  { transform: translate(25px, -78px) scale(1.6); opacity: 1; }
+  50%  { transform: translate(25px, -10px) scale(0.55); opacity: 1; }
+  57%  { transform: translate(25px, -4px)  scale(0.5);  opacity: 1; }
+  64%  { transform: translate(25px, -10px) scale(0.55); opacity: 1; }
+  90%  { transform: translate(25px, -10px) scale(0.55); opacity: 1; }
+  97%  { transform: translate(25px, -10px) scale(0.55); opacity: 0; }
+  100% { transform: translate(25px, -78px) scale(1.6); opacity: 0; }
+}
+
+@keyframes a2hsSlotGlow {
+  0%, 45%   { border-color: var(--border-strong); box-shadow: none; }
+  55%, 90%  { border-color: var(--ember-500); box-shadow: 0 0 12px -2px rgba(240, 118, 43, 0.7); }
+  97%, 100% { border-color: var(--border-strong); box-shadow: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* hold the finished state — the point is "it ends up on your home screen" */
+  .a2hs-icon {
+    animation: none;
+    transform: translate(25px, -10px) scale(0.55);
+  }
+  .a2hs-slot.target {
+    animation: none;
+    border-color: var(--ember-500);
+  }
+}
+
+/* numbered step rows in the install guide */
+.a2hs-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.a2hs-step-n {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-icon-soft);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+/* inline glyph standing in for a button in the user's browser chrome */
+.a2hs-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: -5px;
+  width: 22px;
+  height: 22px;
+  margin: 0 2px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--accent-icon);
+}
+.a2hs-glyph svg { width: 14px; height: 14px; }

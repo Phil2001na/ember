@@ -2,6 +2,27 @@
 
 ## 2026-07-28
 
+### "Add to Home Screen" nudge after a cook
+- The finish-cook screen now offers an install prompt — the moment someone has
+  just seen Ember work is the moment to ask. It's a row card in the existing
+  finish-screen stack (not a modal), opening a sheet with a device-specific
+  guide.
+- `lib/installPlatform.ts` detects iOS Safari / iOS-other / Android / desktop,
+  and whether we're already installed (`display-mode: standalone`, plus
+  `navigator.standalone` for older iOS). iPadOS 13+ masquerades as macOS, so
+  it's caught via `maxTouchPoints`. Non-Safari iOS browsers get told to reopen
+  in Safari, since only Safari can install on iPhone.
+- On Chromium (Android/desktop) the `beforeinstallprompt` event is captured and
+  replayed as a real one-tap OS install dialog; everywhere else the sheet shows
+  the exact taps, with inline glyphs standing in for the browser's own buttons.
+- CSS-only illustration (`.a2hs-*`): the Ember icon drops out of the browser
+  into an empty slot on a little phone's home grid, which lights up ember.
+  No assets, re-tints in light mode, and holds the landed frame under
+  `prefers-reduced-motion`.
+- Nagging guard: hidden once installed, counted once per *cook* (not per
+  render, so reloading a finished cook doesn't burn the budget), and silent
+  forever after two ignored cooks.
+
 ### Voice mic failures now say something, instead of nothing
 - `PushToTalk` (onboarding pantry ramble, home chat, mid-cook chat) silently
   went back to idle on any transcription failure — a dead 503 from
