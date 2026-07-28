@@ -58,6 +58,7 @@ export default function CookClient({
   const [saving, setSaving] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
+  const [micNotice, setMicNotice] = useState<string | null>(null);
   // post-cook pantry check: null = not checked, [] = nothing to remove
   const [usedUp, setUsedUp] = useState<string[] | null>(null);
   const [usedUpChecking, setUsedUpChecking] = useState(false);
@@ -499,15 +500,19 @@ export default function CookClient({
         messages={messages}
         sendMessage={(text) => sendMessage({ text })}
         busy={status === "submitted" || status === "streaming"}
+        notice={micNotice}
         extraControls={
           <>
             <PushToTalk
               disabled={status === "submitted" || status === "streaming"}
               onTranscript={(text) => {
+                setMicNotice(null);
                 setSpeakReplies(true);
                 sendMessage({ text });
               }}
+              onError={setMicNotice}
             />
+
             <button
               type="button"
               className="composer-btn composer-btn-ghost"

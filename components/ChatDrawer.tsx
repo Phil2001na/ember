@@ -18,6 +18,7 @@ export default function ChatDrawer({
   sendMessage,
   busy,
   extraControls,
+  notice,
 }: {
   open: boolean;
   onClose: () => void;
@@ -25,6 +26,7 @@ export default function ChatDrawer({
   sendMessage: (text: string) => void;
   busy: boolean;
   extraControls?: React.ReactNode;
+  notice?: string | null;
 }) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -84,6 +86,12 @@ export default function ChatDrawer({
             </div>
           )}
         </div>
+
+        {notice && (
+          <p style={{ color: "var(--text-dim)", fontSize: "0.8rem", padding: "0 18px 6px", textAlign: "center" }}>
+            {notice}
+          </p>
+        )}
 
         <form onSubmit={submit} style={{ padding: "12px 14px calc(14px + env(safe-area-inset-bottom))" }}>
           <div className="composer" style={{ background: "rgba(14, 12, 10, 0.5)" }}>
