@@ -14,3 +14,9 @@ export const brain =
 
 // Gemini = eyes (pantry photo → ingredients)
 export const eyes = google("gemini-2.5-flash");
+
+// The other provider, for unattended jobs that must not fail just because one
+// account's credits ran out (the Fitness nutrition integration runs with nobody
+// watching, so it retries on this before giving up).
+export const spareBrain =
+  process.env.BRAIN === "gemini" ? anthropic("claude-sonnet-5") : google("gemini-2.5-pro");

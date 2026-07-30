@@ -84,11 +84,17 @@ export default function CookClient({
 
   function sendMealOutcome() {
     if (!fitnessRequestId) return;
-    const url = buildFitnessReturnUrl(inferMealOutcome(recipe, fitnessRequestId));
+    let hints: { kcal?: number; proteinG?: number } | undefined;
+    try {
+      const raw = localStorage.getItem(`ember-fitness-hint-${sessionId}`);
+      if (raw) hints = JSON.parse(raw);
+    } catch {}
+    const url = buildFitnessReturnUrl(inferMealOutcome(recipe, fitnessRequestId, hints));
     if (!url) return;
     setFitnessSent(true);
     try {
       localStorage.removeItem(`ember-fitness-request-${sessionId}`);
+      localStorage.removeItem(`ember-fitness-hint-${sessionId}`);
     } catch {}
     window.location.href = url;
   }

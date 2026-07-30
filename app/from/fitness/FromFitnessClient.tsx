@@ -27,8 +27,24 @@ export default function FromFitnessClient({
   const [genError, setGenError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
 
+  // V2: Fitness already picked the dish in its own nudge — go straight to the
+  // recipe instead of asking the same question twice.
   useEffect(() => {
-    if (!intent) return;
+    if (!intent?.dish) return;
+    setLoading(false);
+    pick({
+      title: intent.dish,
+      description: "",
+      time_minutes: intent.timeMinutes ?? 30,
+      difficulty: "easy",
+      match: "have-everything",
+      missing: [],
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intent?.dish]);
+
+  useEffect(() => {
+    if (!intent || intent.dish) return;
     let cancelled = false;
     (async () => {
       try {
@@ -100,6 +116,14 @@ export default function FromFitnessClient({
     if (intent) {
       try {
         localStorage.setItem(`ember-fitness-request-${data.id}`, intent.requestId);
+        // V2: carry the rough energy figure through the cook so the return trip
+        // can hand Fitness a number instead of a shrug.
+        if (intent.kcalTarget || intent.proteinTargetG) {
+          localStorage.setItem(
+            `ember-fitness-hint-${data.id}`,
+            JSON.stringify({ kcal: intent.kcalTarget, proteinG: intent.proteinTargetG })
+          );
+        }
       } catch {}
     }
     router.push(`/cook/${data.id}`);

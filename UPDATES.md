@@ -1,5 +1,21 @@
 # Ember — update log
 
+## 2026-07-30
+
+### 17:35 — Fitness integration V2: Ember as the food brain
+- New machine-to-machine route `/api/nutrition/suggest`: Guided Training's nudge scheduler asks
+  what's cookable from the real pantry for a given calorie/protein gap, and gets back 2-3 dishes
+  plus a mandatory no-cook `lazy_option`. Gated by `FITNESS_INTEGRATION_SECRET`; pantry reads go
+  through the `public.ember_pantry_for_integration` RPC, so pantry contents never leave Ember —
+  only the dishes do.
+- The route runs unattended, so it now retries on the other AI provider (`spareBrain`) before
+  failing. Found while testing: Gemini's prepayment credits are depleted and Anthropic works,
+  the reverse of the old `BRAIN=gemini` note — corrected in CLAUDE.md.
+- `/from/fitness` accepts V2: a pre-picked `dish` (skips straight to the recipe), plus
+  `kcal_target`/`protein_target` carried through the cook session so the "I ate this" return
+  hands Fitness real numbers instead of a coarse size band.
+- Contract written up in `docs/integrations/fitness-v2.md` (V1 still supported).
+
 ## 2026-07-28
 
 ### "Add to Home Screen" nudge after a cook

@@ -21,9 +21,16 @@ npm run lint
 
 ## Conventions / gotchas
 
-- **`BRAIN=gemini`** env override is currently in effect — Anthropic credits are empty, so the
-  app is routed to `@ai-sdk/google` instead of `@ai-sdk/anthropic`. Don't assume Claude is the
-  active model without checking this env var; switch back once Anthropic credits are restored.
+- **AI provider (checked 2026-07-30): this flipped.** Gemini prepayment credits are now
+  *depleted* and Anthropic works, so `BRAIN` is **unset in production** and Claude is the brain.
+  The older "BRAIN=gemini because Anthropic is empty" note no longer holds — check which
+  provider actually has credit before assuming. `lib/ai.ts` exports `spareBrain` (the other
+  provider) for unattended jobs; `/api/nutrition/suggest` tries both before failing.
+- **Fitness integration:** `/api/nutrition/suggest` is a machine-to-machine route used by the
+  Guided Training nudge scheduler. It is gated by `FITNESS_INTEGRATION_SECRET` and reads the
+  pantry through the `public.ember_pantry_for_integration` RPC — that RPC is Ember's alone to
+  call, which is what keeps pantry contents on this side of the boundary. See
+  `docs/integrations/fitness-v2.md`.
 - Supabase: dedicated `ember` schema (shared Supabase project — see other projects' CLAUDE.md
   for which project/schemas are neighbors before touching cross-cutting config).
 
