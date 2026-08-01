@@ -36,6 +36,11 @@ npm run lint
   new `EMBER_FITNESS_LOG_SECRET` on both Ember and Fitness, and a matching endpoint Fitness has
   to implement — see `docs/integrations/fitness-v3.md` for the exact contract. Until Fitness ships
   that endpoint, the toggle is safe to ship but inert (calls fail soft).
+- **Fitness reserve-a-recipe (V4):** `/api/nutrition/reserve` lets Fitness lock in a dish at
+  planning time and get the real recipe back immediately (persisted in
+  `ember.fitness_reserved_recipes`), so `/from/fitness?recipe_id=...` opens it later instead of
+  generating fresh. Same secret as V2/`/suggest`, no new env vars. See
+  `docs/integrations/fitness-v4.md`.
 - Supabase: dedicated `ember` schema (shared Supabase project — see other projects' CLAUDE.md
   for which project/schemas are neighbors before touching cross-cutting config).
 

@@ -16,6 +16,8 @@ export type NutritionIntentV1 = {
   /** V2 — a dish already picked in Fitness; skip suggestions, go straight to it. */
   dish?: string;
   nudgeId?: string;
+  /** V4 — a recipe already generated at planning time; skip generation entirely. */
+  recipeId?: string;
 };
 
 const GOALS = ["gain", "maintain", "lighter"] as const;
@@ -74,6 +76,7 @@ export function parseNutritionIntent(
 
   const dish = first(searchParams.dish)?.slice(0, 120);
   const nudgeId = first(searchParams.nudge_id);
+  const recipeId = first(searchParams.recipe_id);
 
   return {
     ok: true,
@@ -93,6 +96,9 @@ export function parseNutritionIntent(
         : {}),
       ...(dish ? { dish } : {}),
       ...(nudgeId && UUID_RE.test(nudgeId) ? { nudgeId } : {}),
+      // An invalid/guessed id just falls back to the normal dish/generation
+      // path rather than failing the whole handoff.
+      ...(recipeId && UUID_RE.test(recipeId) ? { recipeId } : {}),
     },
   };
 }

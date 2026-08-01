@@ -26,11 +26,21 @@ export default function FromFitnessClient({
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  const [pantryChanged, setPantryChanged] = useState(false);
+
+  // V4: Fitness already generated the recipe at planning time — open it
+  // directly instead of generating anything fresh.
+  useEffect(() => {
+    if (!intent?.recipeId) return;
+    setLoading(false);
+    loadReserved(intent.recipeId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intent?.recipeId]);
 
   // V2: Fitness already picked the dish in its own nudge — go straight to the
   // recipe instead of asking the same question twice.
   useEffect(() => {
-    if (!intent?.dish) return;
+    if (!intent?.dish || intent.recipeId) return;
     setLoading(false);
     pick({
       title: intent.dish,
@@ -41,10 +51,10 @@ export default function FromFitnessClient({
       missing: [],
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [intent?.dish]);
+  }, [intent?.dish, intent?.recipeId]);
 
   useEffect(() => {
-    if (!intent || intent.dish) return;
+    if (!intent || intent.dish || intent.recipeId) return;
     let cancelled = false;
     (async () => {
       try {
@@ -75,10 +85,48 @@ export default function FromFitnessClient({
     };
   }, [intent]);
 
+  async function loadReserved(recipeId: string) {
+    setPicked({
+      title: intent?.dish ?? "your planned dish",
+      description: "",
+      time_minutes: intent?.timeMinutes ?? 30,
+      difficulty: "easy",
+      match: "have-everything",
+      missing: [],
+    });
+    setRecipe(null);
+    setGenError(null);
+    setPantryChanged(false);
+    try {
+      const res = await fetch(`/api/nutrition/reserved/${recipeId}`);
+      if (!res.ok) throw new Error("not-found");
+      const data = await res.json();
+      setRecipe(data.recipe);
+      setPantryChanged(!!data.pantryChanged);
+    } catch {
+      // Reservation is gone, expired, or not this kitchen's — fall back to
+      // the normal dish flow rather than dead-ending the handoff.
+      if (intent?.dish) {
+        pick({
+          title: intent.dish,
+          description: "",
+          time_minutes: intent.timeMinutes ?? 30,
+          difficulty: "easy",
+          match: "have-everything",
+          missing: [],
+        });
+      } else {
+        setPicked(null);
+        setGenError("That planned recipe isn't available anymore.");
+      }
+    }
+  }
+
   async function pick(s: Suggestion) {
     setPicked(s);
     setRecipe(null);
     setGenError(null);
+    setPantryChanged(false);
     try {
       const notes = s.missing.length
         ? `Missing: ${s.missing
@@ -154,18 +202,45 @@ export default function FromFitnessClient({
         {!recipe ? (
           <div style={{ textAlign: "center", padding: "80px 0", color: "var(--text-dim)" }}>
             <span className="spinner" style={{ width: 32, height: 32, margin: "0 auto 16px", display: "block", color: "var(--accent-icon)" }} />
-            Writing your {picked.title} recipe…
+            {intent?.recipeId ? `Opening your ${picked.title} recipe…` : `Writing your ${picked.title} recipe…`}
           </div>
         ) : (
-          <RecipePreview
-            recipe={recipe}
-            starting={starting}
-            onStart={() => startCooking(recipe)}
-            onBack={() => {
-              setPicked(null);
-              setRecipe(null);
-            }}
-          />
+          <>
+            {pantryChanged && (
+              <div className="card" style={{ marginBottom: 16, fontSize: "0.85rem" }}>
+                <p style={{ color: "var(--text-dim)", marginBottom: intent.dish ? 10 : 0 }}>
+                  Your pantry&rsquo;s changed since this was planned — still fine to cook, just maybe not
+                  spot-on anymore.
+                </p>
+                {intent.dish && (
+                  <button
+                    className="btn btn-ghost"
+                    onClick={() =>
+                      pick({
+                        title: intent.dish!,
+                        description: "",
+                        time_minutes: intent.timeMinutes ?? 30,
+                        difficulty: "easy",
+                        match: "have-everything",
+                        missing: [],
+                      })
+                    }
+                  >
+                    See what&rsquo;s fresh instead
+                  </button>
+                )}
+              </div>
+            )}
+            <RecipePreview
+              recipe={recipe}
+              starting={starting}
+              onStart={() => startCooking(recipe)}
+              onBack={() => {
+                setPicked(null);
+                setRecipe(null);
+              }}
+            />
+          </>
         )}
         {genError && <p style={{ color: "var(--red-warn)", fontSize: "0.85rem", marginTop: 12 }}>{genError}</p>}
       </main>
