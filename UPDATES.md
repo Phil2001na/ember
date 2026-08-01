@@ -2,6 +2,23 @@
 
 ## 2026-08-01
 
+### Image upload in chat — attach photos in both the home chat and mid-cook chat
+- Added an attach-image button + hidden file input to both `KitchenChat` (home chat) and
+  `ChatDrawer` (mid-cook "Ask Ember" drawer, used by `CookClient`). Selected images preview
+  above the composer with a remove option before sending.
+- No API route changes needed: `ai@7`'s `convertToModelMessages` already turns `FileUIPart`s
+  (`{ type: "file", mediaType, url }`, url as a base64 data URL) into model-readable image
+  content automatically, and `brain` (Claude Sonnet 5 / Gemini 2.5 Pro fallback, see `lib/ai.ts`)
+  is already vision-capable — so both chat routes pick up image input for free.
+- New shared helper `lib/chatFiles.ts` (`filesToUIParts`) converts selected `File`s to
+  `FileUIPart[]` via `FileReader`, matching what the SDK does internally for `FileList` input —
+  used because we need per-file removal before send, which a raw `FileList` doesn't support.
+- Sent images render inline in the message bubbles (`.bubble-images` in `globals.css`).
+- Images are stored as base64 data URLs inline in the message; for cook-session chat these ride
+  in the existing `ember.cook_sessions.messages` jsonb blob (no schema change), so a chat with
+  several large photos will grow that row — no Supabase Storage upload path yet if that becomes
+  a problem.
+
 ### Fitness standing link (V3) — log meals to Fitness without a nudge first
 - V1/V2's "I ate this" only ever worked for a cook that started from a Fitness nudge, because
   the return trip was keyed off a `request_id` Fitness handed Ember. Cooking something picked
