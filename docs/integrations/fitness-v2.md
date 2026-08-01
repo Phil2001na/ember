@@ -1,5 +1,8 @@
 # Fitness ↔ Ember — V2 contract
 
+See also `fitness-v3.md` — adds a standing per-user link so a cook that never
+started from a Fitness nudge can still log back, not just ones covered here.
+
 V1 (see `fitness-v1.md`, still supported) was a number-free URL handoff started by
 a person tapping a button. V2 adds the two things the nutrition loop needs:
 
