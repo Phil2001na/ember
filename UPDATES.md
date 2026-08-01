@@ -2,6 +2,29 @@
 
 ## 2026-08-01
 
+### Fitness reserve-a-recipe (V4) — bake the recipe at planning time, not cook time
+- Fitness's meal-planning feature can now ask Ember to generate the actual recipe when a plan
+  gets set 1-2 days out, so the day-of "cook it" opens a ready recipe instead of triggering
+  fresh generation. Full contract in `docs/integrations/fitness-v4.md`.
+- New machine route `POST /api/nutrition/reserve`: same secret-header trust class as
+  `/api/nutrition/suggest`, but told exactly which dish to write (not asked to pick one) and
+  persists the result instead of just returning it. Fails loud on an empty pantry (`422`) or a
+  model failure (`502`) rather than writing a low-quality guess under time pressure — Fitness
+  treats any non-200 as "reservation failed" and saves the plan without a recipe reference.
+- New table `ember.fitness_reserved_recipes` (migration `006_fitness_reserved_recipes.sql`) and
+  `SECURITY DEFINER` RPC `ember_reserve_recipe_for_integration` (mirrors
+  `ember_pantry_for_integration`'s shape) so the secret-gated route can persist a reservation
+  with no Ember session of its own. Unopened reservations older than 4 days are swept per-user
+  on each new reserve — no cron needed.
+- `/from/fitness` gains an optional `recipe_id` param: when present it fetches the reservation
+  (new session-authenticated `GET /api/nutrition/reserved/[id]`, RLS-scoped so one kitchen can't
+  open another's by guessing the id) instead of generating anything. If the pantry's item set
+  has changed since the recipe was reserved, a small notice offers to regenerate fresh rather
+  than silently swapping the dish out from under someone.
+- Existing V1-V3 handoffs (no `recipe_id`) are unchanged.
+
+## 2026-08-01
+
 ### Image upload in chat — attach photos in both the home chat and mid-cook chat
 - Added an attach-image button + hidden file input to both `KitchenChat` (home chat) and
   `ChatDrawer` (mid-cook "Ask Ember" drawer, used by `CookClient`). Selected images preview
