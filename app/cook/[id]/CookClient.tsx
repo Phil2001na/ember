@@ -574,7 +574,9 @@ export default function CookClient({
         open={chatOpen}
         onClose={() => setChatOpen(false)}
         messages={messages}
-        sendMessage={(text) => sendMessage({ text })}
+        sendMessage={(text, files) =>
+          files?.length ? sendMessage(text ? { text, files } : { files }) : sendMessage({ text })
+        }
         busy={status === "submitted" || status === "streaming"}
         notice={micNotice}
         extraControls={

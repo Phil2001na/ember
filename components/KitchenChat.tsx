@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { ArrowUp, CookingPot, Flame, ShoppingBasket, ShoppingCart } from "lucide-react";
+import { ArrowUp, CookingPot, Flame, ImagePlus, ShoppingBasket, ShoppingCart, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Recipe, Suggestion } from "@/lib/schemas";
 import RecipePreview from "@/components/RecipePreview";
@@ -14,12 +14,22 @@ import PantrySheet from "@/components/PantrySheet";
 import PushToTalk from "@/components/PushToTalk";
 import ThemeAnnouncement from "@/components/ThemeAnnouncement";
 import type { HomeNudge } from "@/lib/homeNudge";
+import { filesToUIParts } from "@/lib/chatFiles";
 
 function messageText(m: UIMessage): string {
   return m.parts
     .filter((p): p is Extract<typeof p, { type: "text" }> => p.type === "text")
     .map((p) => p.text)
     .join("");
+}
+
+function messageImages(m: UIMessage): string[] {
+  return m.parts
+    .filter(
+      (p): p is Extract<typeof p, { type: "file" }> =>
+        p.type === "file" && p.mediaType.startsWith("image/")
+    )
+    .map((p) => p.url);
 }
 
 function messagePantryUpdates(m: UIMessage): { added: string[]; removed: string[] }[] {
@@ -88,6 +98,9 @@ export default function KitchenChat({
   const [pantryOpen, setPantryOpen] = useState(false);
   const [listNotice, setListNotice] = useState<string | null>(null);
   const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const attachmentPreviews = useMemo(() => attachments.map((f) => URL.createObjectURL(f)), [attachments]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status } = useChat({
@@ -99,12 +112,28 @@ export default function KitchenChat({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, busy]);
 
-  function submit(e: React.FormEvent) {
+  useEffect(() => {
+    return () => attachmentPreviews.forEach((u) => URL.revokeObjectURL(u));
+  }, [attachmentPreviews]);
+
+  function addAttachments(fileList: FileList | null) {
+    if (!fileList?.length) return;
+    setAttachments((prev) => [...prev, ...Array.from(fileList)]);
+  }
+
+  function removeAttachment(idx: number) {
+    setAttachments((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     const text = input.trim();
-    if (!text || busy) return;
+    if ((!text && attachments.length === 0) || busy) return;
     setInput("");
-    sendMessage({ text });
+    const pending = attachments;
+    setAttachments([]);
+    const files = pending.length ? await filesToUIParts(pending) : undefined;
+    sendMessage(text ? { text, files } : { files: files! });
   }
 
   async function pick(s: Suggestion) {
@@ -254,6 +283,7 @@ export default function KitchenChat({
         )}
         {messages.map((m) => {
           const text = messageText(m);
+          const images = messageImages(m);
           const suggestionGroups = messageSuggestions(m);
           const pantryUpdates = messagePantryUpdates(m);
           const shoppingUpdates = messageShoppingUpdates(m);
@@ -282,6 +312,14 @@ export default function KitchenChat({
                     .join("  ·  ")}
                 </span>
               ))}
+              {images.length > 0 && (
+                <div className="bubble-images" style={{ justifySelf: m.role === "user" ? "end" : "start" }}>
+                  {images.map((url, i) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={i} src={url} alt="Attached" />
+                  ))}
+                </div>
+              )}
               {text && (
                 <div
                   className={m.role === "user" ? "bubble bubble-user" : "bubble bubble-ai"}
@@ -317,6 +355,25 @@ export default function KitchenChat({
         </p>
       )}
 
+      {attachmentPreviews.length > 0 && (
+        <div className="chat-attach-preview">
+          {attachmentPreviews.map((url, i) => (
+            <div key={i} className="chat-attach-thumb">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={url} alt="Selected" />
+              <button
+                type="button"
+                className="chat-attach-remove"
+                onClick={() => removeAttachment(i)}
+                aria-label="Remove image"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <form onSubmit={submit} style={{ padding: "10px 14px" }}>
         <div className="composer">
           <button
@@ -326,6 +383,25 @@ export default function KitchenChat({
             aria-label="Open pantry"
           >
             <ShoppingBasket size={19} />
+          </button>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            hidden
+            ref={fileInputRef}
+            onChange={(e) => {
+              addAttachments(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          <button
+            type="button"
+            className="composer-btn composer-btn-ghost"
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="Attach image"
+          >
+            <ImagePlus size={19} />
           </button>
           <input
             placeholder="e.g. I've got chicken and rice, no idea…"
@@ -340,7 +416,11 @@ export default function KitchenChat({
             }}
             onError={setVoiceNotice}
           />
-          <button className="composer-btn composer-btn-send" disabled={busy || !input.trim()} aria-label="Send">
+          <button
+            className="composer-btn composer-btn-send"
+            disabled={busy || (!input.trim() && attachments.length === 0)}
+            aria-label="Send"
+          >
             <ArrowUp size={19} />
           </button>
         </div>

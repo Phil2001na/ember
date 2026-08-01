@@ -1,14 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ArrowUp, Flame, X } from "lucide-react";
-import type { UIMessage } from "ai";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowUp, Flame, ImagePlus, X } from "lucide-react";
+import type { FileUIPart, UIMessage } from "ai";
+import { filesToUIParts } from "@/lib/chatFiles";
 
 function messageText(m: UIMessage): string {
   return m.parts
     .filter((p): p is Extract<typeof p, { type: "text" }> => p.type === "text")
     .map((p) => p.text)
     .join("");
+}
+
+function messageImages(m: UIMessage): string[] {
+  return m.parts
+    .filter(
+      (p): p is Extract<typeof p, { type: "file" }> =>
+        p.type === "file" && p.mediaType.startsWith("image/")
+    )
+    .map((p) => p.url);
 }
 
 export default function ChatDrawer({
@@ -23,26 +33,40 @@ export default function ChatDrawer({
   open: boolean;
   onClose: () => void;
   messages: UIMessage[];
-  sendMessage: (text: string) => void;
+  sendMessage: (text: string, files?: FileUIPart[]) => void;
   busy: boolean;
   extraControls?: React.ReactNode;
   notice?: string | null;
 }) {
   const [input, setInput] = useState("");
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const attachmentPreviews = useMemo(() => attachments.map((f) => URL.createObjectURL(f)), [attachments]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, open, busy]);
 
+  useEffect(() => {
+    return () => attachmentPreviews.forEach((u) => URL.revokeObjectURL(u));
+  }, [attachmentPreviews]);
+
   if (!open) return null;
 
-  function submit(e: React.FormEvent) {
+  function removeAttachment(idx: number) {
+    setAttachments((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     const text = input.trim();
-    if (!text || busy) return;
+    if ((!text && attachments.length === 0) || busy) return;
     setInput("");
-    sendMessage(text);
+    const pending = attachments;
+    setAttachments([]);
+    const files = pending.length ? await filesToUIParts(pending) : undefined;
+    sendMessage(text, files);
   }
 
   return (
@@ -69,14 +93,21 @@ export default function ChatDrawer({
           )}
           {messages.map((m) => {
             const text = messageText(m);
-            if (!text) return null;
+            const images = messageImages(m);
+            if (!text && images.length === 0) return null;
             return (
-              <div
-                key={m.id}
-                className={m.role === "user" ? "bubble bubble-user" : "bubble bubble-ai"}
-                style={{ justifySelf: m.role === "user" ? "end" : "start" }}
-              >
-                {text}
+              <div key={m.id} style={{ display: "grid", gap: 6, justifyItems: m.role === "user" ? "end" : "start" }}>
+                {images.length > 0 && (
+                  <div className="bubble-images">
+                    {images.map((url, i) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={i} src={url} alt="Attached" />
+                    ))}
+                  </div>
+                )}
+                {text && (
+                  <div className={m.role === "user" ? "bubble bubble-user" : "bubble bubble-ai"}>{text}</div>
+                )}
               </div>
             );
           })}
@@ -93,15 +124,57 @@ export default function ChatDrawer({
           </p>
         )}
 
+        {attachmentPreviews.length > 0 && (
+          <div className="chat-attach-preview">
+            {attachmentPreviews.map((url, i) => (
+              <div key={i} className="chat-attach-thumb">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt="Selected" />
+                <button
+                  type="button"
+                  className="chat-attach-remove"
+                  onClick={() => removeAttachment(i)}
+                  aria-label="Remove image"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
         <form onSubmit={submit} style={{ padding: "12px 14px calc(14px + env(safe-area-inset-bottom))" }}>
           <div className="composer" style={{ background: "rgba(14, 12, 10, 0.5)" }}>
             {extraControls}
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              ref={fileInputRef}
+              onChange={(e) => {
+                if (e.target.files?.length) setAttachments((prev) => [...prev, ...Array.from(e.target.files!)]);
+                e.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              className="composer-btn composer-btn-ghost"
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="Attach image"
+            >
+              <ImagePlus size={19} />
+            </button>
             <input
               placeholder="e.g. I think I added too much salt…"
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
-            <button className="composer-btn composer-btn-send" disabled={busy || !input.trim()} aria-label="Send">
+            <button
+              className="composer-btn composer-btn-send"
+              disabled={busy || (!input.trim() && attachments.length === 0)}
+              aria-label="Send"
+            >
               <ArrowUp size={19} />
             </button>
           </div>
