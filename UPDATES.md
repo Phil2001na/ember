@@ -1,5 +1,25 @@
 # Ember — update log
 
+## 2026-08-01
+
+### Fitness standing link (V3) — log meals to Fitness without a nudge first
+- V1/V2's "I ate this" only ever worked for a cook that started from a Fitness nudge, because
+  the return trip was keyed off a `request_id` Fitness handed Ember. Cooking something picked
+  inside Ember directly (chat, Explore, pantry) had nothing to send back with — reported as
+  "finish cooking and nothing happens."
+- New Settings toggle ("Log meals to Fitness") turns this on per-user
+  (`ember.profiles.fitness_auto_log`, migration `005_fitness_auto_log.sql`). When it's on, the
+  finish-cook screen offers "I ate this" for every cook, not just Fitness-originated ones.
+- New route `POST /api/nutrition/log`: session-authenticated (not secret-gated like the inbound
+  machine route), looks up the caller's own completed `cook_sessions` row, infers the outcome
+  from the actual recipe, and relays it to Fitness server-to-server — the shared secret never
+  touches the browser and there's no `request_id` in a URL to forge, which is a stronger shape
+  than the V1/V2 browser redirect.
+- Requires Fitness to implement a matching `POST /api/nutrition/log` endpoint and a new shared
+  secret (`EMBER_FITNESS_LOG_SECRET`) — full contract in `docs/integrations/fitness-v3.md`.
+  Until that lands on Fitness's side, the toggle is safe to ship but inert: calls fail soft and
+  the user sees "Couldn't reach Fitness — try again."
+
 ## 2026-07-30
 
 ### 17:35 — Fitness integration V2: Ember as the food brain

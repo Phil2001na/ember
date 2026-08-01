@@ -74,6 +74,9 @@ export default function CookClient({
     }
   });
   const [fitnessSent, setFitnessSent] = useState(false);
+  const [fitnessAutoLog, setFitnessAutoLog] = useState(false);
+  const [fitnessLogBusy, setFitnessLogBusy] = useState(false);
+  const [fitnessLogError, setFitnessLogError] = useState(false);
   const speakRepliesRef = useRef(speakReplies);
   speakRepliesRef.current = speakReplies;
   const spokenIds = useRef<Set<string>>(new Set(initialMessages.map((m) => m.id)));
@@ -81,6 +84,46 @@ export default function CookClient({
   const stepRef = useRef(stepIdx);
   stepRef.current = stepIdx;
   const cookTimers = useCookTimers(`ember-timers-${sessionId}`, `/cook/${sessionId}`);
+
+  // Standing link (docs/integrations/fitness-v3.md): only relevant for cooks
+  // that didn't start from a Fitness nudge — those already get the V1/V2 flow.
+  useEffect(() => {
+    if (fitnessRequestId || !process.env.NEXT_PUBLIC_FITNESS_URL) return;
+    let cancelled = false;
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("fitness_auto_log")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!cancelled) setFitnessAutoLog(!!data?.fitness_auto_log);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [fitnessRequestId, supabase]);
+
+  async function logMealAuto() {
+    setFitnessLogBusy(true);
+    setFitnessLogError(false);
+    try {
+      const res = await fetch("/api/nutrition/log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      });
+      if (!res.ok) throw new Error("log failed");
+      setFitnessSent(true);
+    } catch {
+      setFitnessLogError(true);
+    } finally {
+      setFitnessLogBusy(false);
+    }
+  }
 
   function sendMealOutcome() {
     if (!fitnessRequestId) return;
@@ -364,6 +407,30 @@ export default function CookClient({
               <p>{fitnessSent ? "Heading back over now" : "Let Fitness know without leaving details behind"}</p>
             </div>
             {!fitnessSent && <ChevronRight size={19} style={{ color: "var(--text-faint)" }} />}
+          </button>
+        )}
+
+        {!fitnessRequestId && fitnessAutoLog && (
+          <button
+            className="card row-card fade-in"
+            style={{ marginBottom: 16, opacity: fitnessSent ? 0.75 : undefined }}
+            onClick={logMealAuto}
+            disabled={fitnessSent || fitnessLogBusy}
+          >
+            <span className="row-card-icon" style={fitnessSent ? { borderColor: "var(--green-ok)", color: "var(--green-ok)" } : undefined}>
+              {fitnessLogBusy ? <span className="spinner" style={{ width: 18, height: 18 }} /> : <Activity />}
+            </span>
+            <div style={{ flex: 1 }}>
+              <h3>{fitnessSent ? "Logged to Fitness" : "I ate this"}</h3>
+              <p>
+                {fitnessSent
+                  ? "Your Fitness ledger just got a new entry"
+                  : fitnessLogError
+                    ? "Couldn't reach Fitness — try again"
+                    : "Send this meal to Fitness without leaving Ember"}
+              </p>
+            </div>
+            {!fitnessSent && !fitnessLogBusy && <ChevronRight size={19} style={{ color: "var(--text-faint)" }} />}
           </button>
         )}
 

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, Palette } from "lucide-react";
+import { Activity, ChevronLeft, Palette } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import FitnessConnection from "@/components/FitnessConnection";
 
 export default function SettingsPage() {
   return (
@@ -16,12 +17,21 @@ export default function SettingsPage() {
       <div className="section-head">
         <Palette /> Appearance
       </div>
-      <div className="card">
+      <div className="card" style={{ marginBottom: 24 }}>
         <p style={{ color: "var(--text-dim)", fontSize: "0.88rem", marginBottom: 14 }}>
           Choose how Ember looks on this device.
         </p>
         <ThemeToggle />
       </div>
+
+      {process.env.NEXT_PUBLIC_FITNESS_URL && (
+        <>
+          <div className="section-head">
+            <Activity /> Fitness
+          </div>
+          <FitnessConnection />
+        </>
+      )}
     </main>
   );
 }

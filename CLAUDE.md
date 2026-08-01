@@ -31,6 +31,11 @@ npm run lint
   pantry through the `public.ember_pantry_for_integration` RPC — that RPC is Ember's alone to
   call, which is what keeps pantry contents on this side of the boundary. See
   `docs/integrations/fitness-v2.md`.
+- **Fitness standing link (V3):** cooks that *didn't* start from a Fitness nudge can now log too,
+  via a Settings toggle (`ember.profiles.fitness_auto_log`) and `/api/nutrition/log`. Requires a
+  new `EMBER_FITNESS_LOG_SECRET` on both Ember and Fitness, and a matching endpoint Fitness has
+  to implement — see `docs/integrations/fitness-v3.md` for the exact contract. Until Fitness ships
+  that endpoint, the toggle is safe to ship but inert (calls fail soft).
 - Supabase: dedicated `ember` schema (shared Supabase project — see other projects' CLAUDE.md
   for which project/schemas are neighbors before touching cross-cutting config).
 
