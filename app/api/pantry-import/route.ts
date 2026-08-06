@@ -1,6 +1,6 @@
 import { generateObject } from "ai";
 import { NextResponse } from "next/server";
-import { brain } from "@/lib/ai";
+import { brain, reasoningEffort } from "@/lib/ai";
 import { PantryImportSchema } from "@/lib/schemas";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,6 +24,7 @@ export async function POST(request: Request) {
 
   const { object } = await generateObject({
     model: brain,
+    providerOptions: reasoningEffort,
     schema: PantryImportSchema,
     prompt: `Extract the food ingredients this person says they currently have into a pantry list.
 

@@ -1,7 +1,7 @@
 import { generateObject } from "ai";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { brain, spareBrain } from "@/lib/ai";
+import { brain, reasoningEffort } from "@/lib/ai";
 import { createMachineClient } from "@/lib/supabase/machine";
 import { RecipeSchema } from "@/lib/schemas";
 
@@ -95,53 +95,53 @@ RULES:
 - needs_cooking: false only if this is genuinely a no-cook assembly.
 - why: half a sentence on why this fits what they asked for. Never mention calories, macros, dieting or nutrition tracking here — that's Fitness's job, not yours.`;
 
-  const failures: string[] = [];
-  for (const model of [brain, spareBrain]) {
-    try {
-      const { object } = await generateObject({ model, schema: ReservedDishSchema, prompt });
-      const { kcal_estimate, protein_g_estimate, needs_cooking, why, ...recipe } = object;
+  try {
+    const { object } = await generateObject({
+      model: brain,
+      providerOptions: reasoningEffort,
+      schema: ReservedDishSchema,
+      prompt,
+    });
+    const { kcal_estimate, protein_g_estimate, needs_cooking, why, ...recipe } = object;
 
-      const { data: recipeId, error: insertError } = await supabase.rpc(
-        "ember_reserve_recipe_for_integration",
-        {
-          p_secret: expected,
-          p_user_id: emberUserId,
-          p_dish: dish,
-          p_slot: slot,
-          p_recipe: recipe,
-          p_kcal_estimate: kcal_estimate,
-          p_protein_g_estimate: protein_g_estimate,
-          p_time_minutes: recipe.time_minutes,
-          p_needs_cooking: needs_cooking,
-          p_why: why,
-          p_pantry_snapshot: pantry.map((p) => p.item),
-        }
-      );
-      if (insertError || !recipeId) {
-        return NextResponse.json(
-          { error: insertError?.message ?? "reserve-failed" },
-          { status: 500 }
-        );
+    const { data: recipeId, error: insertError } = await supabase.rpc(
+      "ember_reserve_recipe_for_integration",
+      {
+        p_secret: expected,
+        p_user_id: emberUserId,
+        p_dish: dish,
+        p_slot: slot,
+        p_recipe: recipe,
+        p_kcal_estimate: kcal_estimate,
+        p_protein_g_estimate: protein_g_estimate,
+        p_time_minutes: recipe.time_minutes,
+        p_needs_cooking: needs_cooking,
+        p_why: why,
+        p_pantry_snapshot: pantry.map((p) => p.item),
       }
-
-      return NextResponse.json({
-        recipe_id: recipeId,
-        title: recipe.title,
-        description: recipe.description,
-        kcal_estimate,
-        protein_g_estimate,
-        time_minutes: recipe.time_minutes,
-        needs_cooking,
-        why,
-      });
-    } catch (err) {
-      const detail = err instanceof Error ? err.message : String(err);
-      console.error("[nutrition/reserve] model failed:", detail);
-      failures.push(detail.slice(0, 200));
+    );
+    if (insertError || !recipeId) {
+      return NextResponse.json(
+        { error: insertError?.message ?? "reserve-failed" },
+        { status: 500 }
+      );
     }
-  }
 
-  // Secret-gated, machine-to-machine — the detail is safe here, and Fitness
-  // just falls back to a plan with no recipe reference.
-  return NextResponse.json({ error: "reserve-failed", failures }, { status: 502 });
+    return NextResponse.json({
+      recipe_id: recipeId,
+      title: recipe.title,
+      description: recipe.description,
+      kcal_estimate,
+      protein_g_estimate,
+      time_minutes: recipe.time_minutes,
+      needs_cooking,
+      why,
+    });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    console.error("[nutrition/reserve] model failed:", detail);
+    // Secret-gated, machine-to-machine — the detail is safe here, and Fitness
+    // just falls back to a plan with no recipe reference.
+    return NextResponse.json({ error: "reserve-failed", failures: [detail.slice(0, 200)] }, { status: 502 });
+  }
 }

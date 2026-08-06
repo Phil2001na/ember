@@ -1,7 +1,7 @@
 import { generateObject } from "ai";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { brain, spareBrain } from "@/lib/ai";
+import { brain, reasoningEffort } from "@/lib/ai";
 import { createMachineClient } from "@/lib/supabase/machine";
 
 export const maxDuration = 60;
@@ -99,21 +99,20 @@ RULES:
 - Energy and protein numbers are deliberately rough working estimates. Give a sensible figure for one serving and move on.
 - Never mention calorie counting, macros, dieting or nutrition tracking in the description or why — that's Fitness's job, not yours. Just talk about food.`;
 
-  // Nobody is watching this call, so a dead API key on one provider shouldn't
-  // cost the user their reminder. Try the usual brain, then the other one.
-  const failures: string[] = [];
-  for (const model of [brain, spareBrain]) {
-    try {
-      const { object } = await generateObject({ model, schema: ResponseSchema, prompt });
-      return NextResponse.json(object);
-    } catch (err) {
-      const detail = err instanceof Error ? err.message : String(err);
-      console.error("[nutrition/suggest] model failed:", detail);
-      failures.push(detail.slice(0, 200));
-    }
+  // Nobody is watching this call, so surface the failure detail rather than a
+  // bare 502 — this route is secret-gated and machine-to-machine, so it's safe
+  // to include and saves a redeploy when debugging.
+  try {
+    const { object } = await generateObject({
+      model: brain,
+      providerOptions: reasoningEffort,
+      schema: ResponseSchema,
+      prompt,
+    });
+    return NextResponse.json(object);
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    console.error("[nutrition/suggest] model failed:", detail);
+    return NextResponse.json({ error: "suggest-failed", failures: [detail.slice(0, 200)] }, { status: 502 });
   }
-
-  // This route is secret-gated and machine-to-machine, so the detail is safe
-  // here and saves a redeploy when a provider's credits run out.
-  return NextResponse.json({ error: "suggest-failed", failures }, { status: 502 });
 }

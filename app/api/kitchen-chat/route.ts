@@ -6,7 +6,7 @@ import {
   type UIMessage,
 } from "ai";
 import { NextResponse } from "next/server";
-import { brain } from "@/lib/ai";
+import { brain, reasoningEffort } from "@/lib/ai";
 import {
   PantryUpdateSchema,
   ShoppingListUpdateSchema,
@@ -38,6 +38,7 @@ export async function POST(request: Request) {
 
   const result = streamText({
     model: brain,
+    providerOptions: reasoningEffort,
     instructions: [
       {
         role: "system",

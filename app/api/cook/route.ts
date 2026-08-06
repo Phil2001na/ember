@@ -7,7 +7,7 @@ import {
 } from "ai";
 import { z } from "zod";
 import { NextResponse } from "next/server";
-import { brain } from "@/lib/ai";
+import { brain, reasoningEffort } from "@/lib/ai";
 import { RecipeStepSchema, type Recipe } from "@/lib/schemas";
 import { applyAmendment } from "@/lib/recipe";
 import { loadKitchen, kitchenPrompt } from "@/lib/kitchen";
@@ -51,6 +51,7 @@ export async function POST(request: Request) {
 
   const result = streamText({
     model: brain,
+    providerOptions: reasoningEffort,
     instructions: [
       {
         role: "system",

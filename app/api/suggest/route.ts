@@ -1,6 +1,6 @@
 import { generateObject } from "ai";
 import { NextResponse } from "next/server";
-import { brain } from "@/lib/ai";
+import { brain, reasoningEffort } from "@/lib/ai";
 import { SuggestionsSchema } from "@/lib/schemas";
 import { loadKitchen, kitchenPrompt } from "@/lib/kitchen";
 
@@ -17,6 +17,7 @@ export async function POST(request: Request) {
 
   const { object } = await generateObject({
     model: brain,
+    providerOptions: reasoningEffort,
     schema: SuggestionsSchema,
     prompt: `You are Ember, a warm and practical cooking companion.
 

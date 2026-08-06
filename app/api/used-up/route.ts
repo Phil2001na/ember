@@ -1,6 +1,6 @@
 import { generateObject } from "ai";
 import { NextResponse } from "next/server";
-import { brain } from "@/lib/ai";
+import { brain, reasoningEffort } from "@/lib/ai";
 import type { UIMessage } from "ai";
 import { UsedUpSchema, type Recipe } from "@/lib/schemas";
 import { loadKitchen } from "@/lib/kitchen";
@@ -45,6 +45,7 @@ export async function POST(request: Request) {
 
   const { object } = await generateObject({
     model: brain,
+    providerOptions: reasoningEffort,
     schema: UsedUpSchema,
     prompt: `Someone just finished cooking "${recipe.title}". Work out which of their
 pantry items this cook most likely FINISHED OFF, so those can be removed from

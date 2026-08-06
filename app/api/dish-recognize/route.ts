@@ -1,6 +1,6 @@
 import { generateObject } from "ai";
 import { NextResponse } from "next/server";
-import { eyes } from "@/lib/ai";
+import { eyes, reasoningEffort } from "@/lib/ai";
 import { DishRecognizeSchema } from "@/lib/schemas";
 import { createClient } from "@/lib/supabase/server";
 
@@ -23,6 +23,7 @@ export async function POST(request: Request) {
 
   const { object } = await generateObject({
     model: eyes,
+    providerOptions: reasoningEffort,
     schema: DishRecognizeSchema,
     messages: [
       {

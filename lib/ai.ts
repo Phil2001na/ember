@@ -1,22 +1,15 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
 
-const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
+const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// The cook brain (suggestions, recipes, live coaching).
-// Claude Sonnet is the intended brain; BRAIN=gemini is the stopgap for when
-// Anthropic credits run dry (same trick as the Keeper).
-export const brain =
-  process.env.BRAIN === "gemini"
-    ? google("gemini-2.5-pro")
-    : anthropic("claude-sonnet-5");
+// One cost-efficient GPT model for coaching, structured recipe work, and vision
+// (only provider with credit right now — see UPDATES.md 2026-08-06).
+export const brain = openai("gpt-5.6-luna");
+export const eyes = brain;
 
-// Gemini = eyes (pantry photo → ingredients)
-export const eyes = google("gemini-2.5-flash");
-
-// The other provider, for unattended jobs that must not fail just because one
-// account's credits ran out (the Fitness nutrition integration runs with nobody
-// watching, so it retries on this before giving up).
-export const spareBrain =
-  process.env.BRAIN === "gemini" ? anthropic("claude-sonnet-5") : google("gemini-2.5-pro");
+// "high" reasoning effort measured ~68s on a full recipe generation — close
+// enough to the 60-90s route maxDuration to risk a platform timeout under any
+// extra latency (cold start, longer prompt, network jitter). "medium" measured
+// ~20s on the same prompt with no visible quality loss for this kind of
+// structured writing task, so that's the default everywhere.
+export const reasoningEffort = { openai: { reasoningEffort: "medium" as const } };

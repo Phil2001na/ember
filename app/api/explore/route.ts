@@ -1,6 +1,6 @@
 import { generateObject } from "ai";
 import { NextResponse } from "next/server";
-import { brain } from "@/lib/ai";
+import { brain, reasoningEffort } from "@/lib/ai";
 import { ExploreDishesSchema } from "@/lib/schemas";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,6 +25,7 @@ export async function POST() {
 
   const { object } = await generateObject({
     model: brain,
+    providerOptions: reasoningEffort,
     schema: ExploreDishesSchema,
     prompt: `You are Ember, a cooking companion for home cooks in Namibia and beyond.
 

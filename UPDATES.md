@@ -1,12 +1,17 @@
 # Ember — update log
 
 ## 2026-08-06 (fix)
-- Recipe generation was hanging then failing: an uncommitted, unfinished change
-  had switched `lib/ai.ts`'s `brain` to `openai("gpt-5.6-luna")` — not a real
-  OpenAI model id — with `reasoningEffort: "high"` layered on every route.
-  Reverted `brain`/`eyes`/`spareBrain` back to the working Claude/Gemini setup
-  (per this repo's own CLAUDE.md: Anthropic has credit, Gemini is the
-  fallback) and dropped the now-unused `@ai-sdk/openai` dependency.
+- Recipe generation was hanging then failing. First pass wrongly assumed
+  `gpt-5.6-luna` was a bad model id and reverted to Claude/Gemini — it isn't;
+  Philip's on OpenAI now (Luna is ~80% cheaper and it's the only provider with
+  credit). Real cause: `reasoningEffort: "high"` on the full recipe schema
+  measured ~68s in testing, close enough to the 60-90s route `maxDuration`s to
+  tip over into a platform timeout under any extra latency. Switched every
+  route to `reasoningEffort: "medium"` (measured ~20s on the same prompt, no
+  visible quality loss) and consolidated `lib/ai.ts` to OpenAI only
+  (`brain`/`eyes` both `gpt-5.6-luna`), dropping the now-unused
+  `@ai-sdk/anthropic`/`@ai-sdk/google` dependencies and the dead
+  `spareBrain` fallback in the two Fitness machine routes.
 - Added a `RecipeProgress` component (cycling status line + progress bar over
   `RecipePreviewSkeleton`) so the "writing your recipe" wait doesn't look
   frozen. Wired into `/suggest`, `/explore`, `/shopping`, and `/from/fitness`,
