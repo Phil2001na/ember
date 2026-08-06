@@ -6,7 +6,7 @@ import { Check, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { ExploreDish, Recipe } from "@/lib/schemas";
 import RecipePreview from "@/components/RecipePreview";
-import RecipePreviewSkeleton from "@/components/RecipePreviewSkeleton";
+import RecipeProgress from "@/components/RecipeProgress";
 
 type Dish = ExploreDish & { id: string };
 
@@ -93,12 +93,7 @@ export default function ExploreClient({
     return (
       <main className="page fade-in">
         {!recipe ? (
-          <>
-            <p className="page-sub" style={{ marginBottom: 12 }}>
-              Writing your {picked.title} recipe…
-            </p>
-            <RecipePreviewSkeleton />
-          </>
+          <RecipeProgress title={picked.title} />
         ) : (
           <RecipePreview
             recipe={recipe}

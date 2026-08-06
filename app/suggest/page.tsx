@@ -7,7 +7,7 @@ import { Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { DishCheck, Recipe, Suggestion } from "@/lib/schemas";
 import RecipePreview from "@/components/RecipePreview";
-import RecipePreviewSkeleton from "@/components/RecipePreviewSkeleton";
+import RecipeProgress from "@/components/RecipeProgress";
 import Skeleton from "@/components/Skeleton";
 
 type Stage =
@@ -334,14 +334,7 @@ export default function SuggestPage() {
         </div>
       )}
 
-      {stage.name === "generating" && (
-        <>
-          <p className="page-sub" style={{ marginBottom: 12 }}>
-            Writing your {stage.title} recipe, step by step…
-          </p>
-          <RecipePreviewSkeleton />
-        </>
-      )}
+      {stage.name === "generating" && <RecipeProgress title={stage.title} />}
 
       {stage.name === "preview" && (
         <RecipePreview

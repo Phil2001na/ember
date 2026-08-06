@@ -1,5 +1,17 @@
 # Ember — update log
 
+## 2026-08-06 (fix)
+- Recipe generation was hanging then failing: an uncommitted, unfinished change
+  had switched `lib/ai.ts`'s `brain` to `openai("gpt-5.6-luna")` — not a real
+  OpenAI model id — with `reasoningEffort: "high"` layered on every route.
+  Reverted `brain`/`eyes`/`spareBrain` back to the working Claude/Gemini setup
+  (per this repo's own CLAUDE.md: Anthropic has credit, Gemini is the
+  fallback) and dropped the now-unused `@ai-sdk/openai` dependency.
+- Added a `RecipeProgress` component (cycling status line + progress bar over
+  `RecipePreviewSkeleton`) so the "writing your recipe" wait doesn't look
+  frozen. Wired into `/suggest`, `/explore`, `/shopping`, and `/from/fitness`,
+  replacing their static skeleton-only loaders.
+
 ## 2026-08-01
 
 ### Fitness reserve-a-recipe (V4) — bake the recipe at planning time, not cook time
@@ -59,6 +71,28 @@
   secret (`EMBER_FITNESS_LOG_SECRET`) — full contract in `docs/integrations/fitness-v3.md`.
   Until that lands on Fitness's side, the toggle is safe to ship but inert: calls fail soft and
   the user sees "Couldn't reach Fitness — try again."
+
+## 2026-08-01
+
+### 00:40 — Kitchens could get silently replaced, and there was no way back
+- `proxy.ts` called `signInAnonymously()` on any empty `getUser()`, including
+  when a session cookie was present but momentarily unreadable — an expired
+  token, a refresh losing a race with a parallel request. That overwrote the
+  cookie with a brand-new anonymous kitchen and orphaned the old one, with no
+  way back. This is the same bug class that stranded earlier kitchens. Now it
+  only mints on a true first visit (no auth cookie at all), and non-navigation
+  requests never mint at all.
+- Added name+secret account recovery (`ember.account_keys`,
+  `ember.set_handle` / `ember.claim_handle` / `ember.my_handle`, migration
+  `005_account_handles.sql`), same shape as Fitness's — deliberately, so the
+  two apps recover the same way even though each keeps its own anonymous
+  session (linked only via `fitness.profiles.ember_user_id`, never the same
+  `auth.uid()`). Claiming moves profile, equipment, pantry, cook sessions,
+  saved recipes, shopping list, and planned meals onto the current device;
+  refuses if the current device already has a stocked pantry. Wired into
+  `AccountCard` on the profile page, above the existing email flow.
+- Known gap: pantry photos in Storage are keyed by the old user id in their
+  path and don't move on claim — only DB rows do.
 
 ## 2026-07-30
 

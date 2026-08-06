@@ -17,7 +17,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import Skeleton from "@/components/Skeleton";
 import RecipePreview from "@/components/RecipePreview";
-import RecipePreviewSkeleton from "@/components/RecipePreviewSkeleton";
+import RecipeProgress from "@/components/RecipeProgress";
 import type {
   DishCheck,
   DishRecognize,
@@ -470,12 +470,7 @@ export default function ShoppingClient({
             </button>
           </div>
         ) : !cookRecipe ? (
-          <>
-            <p className="page-sub" style={{ marginBottom: 12 }}>
-              Writing your {cooking.title} recipe…
-            </p>
-            <RecipePreviewSkeleton />
-          </>
+          <RecipeProgress title={cooking.title} />
         ) : (
           <RecipePreview
             recipe={cookRecipe}
