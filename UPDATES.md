@@ -1,5 +1,25 @@
 # Ember — update log
 
+## 2026-08-06 22:25 — the Fitness integration was dead in production
+- `/api/nutrition/suggest` and `/api/nutrition/reserve` were both returning
+  `permission denied for function ember_pantry_for_integration`. Guided Training's
+  coach and its nudge scheduler both go through `/suggest`, so neither had a food
+  brain — they'd been falling back to the generic "easy option" every time.
+- Cause: `lib/supabase/machine.ts` deliberately holds only **anon** rights, with the
+  elevation happening inside the secret-gated `SECURITY DEFINER` RPCs. Both RPCs had
+  lost `EXECUTE` for `anon`. `ember_pantry_for_integration` never had an explicit
+  grant at all — it relied on the default EXECUTE-to-PUBLIC, which a later
+  `revoke … from public` took away; `ember_reserve_recipe_for_integration`'s revoke
+  reached the database but its matching grant didn't.
+- Fixed in `007_restore_integration_grants.sql`: granted to named roles rather than
+  leaning on PUBLIC, so a future revoke can't silently disarm them again. Same class
+  of bug that took Guided Training down earlier today.
+- That migration also captures `ember_pantry_for_integration` in a migration for the
+  first time — it had been applied ad hoc during the V2 work, so the repo didn't
+  describe production.
+- Verified live: `reserve` writes a real recipe from the pantry, `suggest` returns
+  three options again.
+
 ## 2026-08-06 (fix)
 - Recipe generation was hanging then failing. First pass wrongly assumed
   `gpt-5.6-luna` was a bad model id and reverted to Claude/Gemini — it isn't;
