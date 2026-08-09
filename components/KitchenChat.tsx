@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { ArrowUp, CookingPot, Flame, ImagePlus, ShoppingBasket, ShoppingCart, X } from "lucide-react";
+import { ArrowUp, Brain, CookingPot, Flame, ImagePlus, ShoppingBasket, ShoppingCart, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Recipe, Suggestion } from "@/lib/schemas";
 import RecipePreview from "@/components/RecipePreview";
@@ -27,9 +27,13 @@ function messageImages(m: UIMessage): string[] {
   return m.parts
     .filter(
       (p): p is Extract<typeof p, { type: "file" }> =>
-        p.type === "file" && p.mediaType.startsWith("image/")
+        p.type === "file" && p.mediaType.startsWith("image/") && Boolean(p.url)
     )
     .map((p) => p.url);
+}
+
+function hasImageAttachment(m: UIMessage): boolean {
+  return m.parts.some((p) => p.type === "file" && p.mediaType.startsWith("image/"));
 }
 
 function messagePantryUpdates(m: UIMessage): { added: string[]; removed: string[] }[] {
@@ -77,14 +81,31 @@ function messageSuggestions(m: UIMessage): Suggestion[][] {
   return groups;
 }
 
+function messagePreferenceUpdates(m: UIMessage): { remembered?: string; forgotten?: string }[] {
+  const updates: { remembered?: string; forgotten?: string }[] = [];
+  for (const part of m.parts) {
+    if (
+      (part.type === "tool-remember_preference" || part.type === "tool-forget_preference") &&
+      part.state === "output-available" &&
+      part.output
+    ) {
+      const output = part.output as { remembered?: string; forgotten?: string };
+      if (output.remembered || output.forgotten) updates.push(output);
+    }
+  }
+  return updates;
+}
+
 export default function KitchenChat({
   greeting,
   pantryEmpty,
+  initialMessages,
   activeSession,
   nudge,
 }: {
   greeting: string;
   pantryEmpty: boolean;
+  initialMessages: UIMessage[];
   activeSession: { id: string; title: string; step: number } | null;
   nudge: HomeNudge;
 }) {
@@ -104,6 +125,7 @@ export default function KitchenChat({
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status } = useChat({
+    messages: initialMessages,
     transport: new DefaultChatTransport({ api: "/api/kitchen-chat" }),
   });
   const busy = status === "submitted" || status === "streaming";
@@ -284,9 +306,11 @@ export default function KitchenChat({
         {messages.map((m) => {
           const text = messageText(m);
           const images = messageImages(m);
+          const hasImage = hasImageAttachment(m);
           const suggestionGroups = messageSuggestions(m);
           const pantryUpdates = messagePantryUpdates(m);
           const shoppingUpdates = messageShoppingUpdates(m);
+          const preferenceUpdates = messagePreferenceUpdates(m);
           return (
             <div key={m.id} style={{ display: "grid", gap: 10, minWidth: 0, maxWidth: "100%", justifyItems: m.role === "user" ? "end" : "start" }}>
               {pantryUpdates.map((u, i) => (
@@ -312,6 +336,11 @@ export default function KitchenChat({
                     .join("  ·  ")}
                 </span>
               ))}
+              {preferenceUpdates.map((u, i) => (
+                <span key={`mu-${i}`} className="badge badge-accent" style={{ justifySelf: "start" }}>
+                  <Brain /> {u.remembered ? `I’ll remember: ${u.remembered}` : `Forgot: ${u.forgotten}`}
+                </span>
+              ))}
               {images.length > 0 && (
                 <div className="bubble-images" style={{ justifySelf: m.role === "user" ? "end" : "start" }}>
                   {images.map((url, i) => (
@@ -319,6 +348,11 @@ export default function KitchenChat({
                     <img key={i} src={url} alt="Attached" />
                   ))}
                 </div>
+              )}
+              {hasImage && images.length === 0 && (
+                <span className="badge badge-outline" style={{ justifySelf: m.role === "user" ? "end" : "start" }}>
+                  <ImagePlus size={14} /> Photo
+                </span>
               )}
               {text && (
                 <div

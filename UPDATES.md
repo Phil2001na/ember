@@ -1,5 +1,30 @@
 # Ember — update log
 
+## 2026-08-09 20:18
+- Added durable, per-kitchen home-chat history: the last 40 turns now survive reloads and device hand-off, while image pixels are retained only for the turn that needs them.
+- Added editable, explicit cooking preferences in Settings plus remember/forget chat tools; Ember receives these as confirmed instructions, never inferred personality facts.
+- Grounded suggestions in the last five completed dishes as a gentle anti-repeat cue, with no automatic preference profiling.
+
+## 2026-08-09 20:10 — prompt-cache repairs (API cost audit)
+- **`kitchen-chat` was replaying history newest-first.** `stored` comes back
+  `ascending: false` (that's how you take the last 40) and was fed straight to the
+  model unreversed. Two bugs in one: the transcript was scrambled, and because the
+  newest message landed at the FRONT of the history, the request prefix changed on
+  every turn so nothing could ever be served from cache. Now reversed into
+  chronological order.
+- **Volatile state moved out of the system block in both chat routes.** OpenAI caches
+  on exact prefix match, so anything that changes each turn invalidates everything
+  below it. `cook` had the current-step line in its own system message *above* the
+  history, which meant every step advance re-billed the persona + kitchen + full
+  recipe JSON; `kitchen-chat` had the pantry above ~700 tokens of rules, so every
+  `update_pantry` call did the same. Both now keep `instructions` byte-identical and
+  append the changing part after the history, just before the newest message.
+- Deleted the `anthropic.cacheControl` breakpoints in both routes. They were written
+  for a provider Ember hasn't used in a while — the OpenAI provider silently drops
+  them, so they read as working caching while doing nothing.
+- Corrected the AI-provider note in `CLAUDE.md`. It claimed `BRAIN` is unset and
+  Claude is the brain, and referenced a `spareBrain` fallback; none of that is true —
+  `lib/ai.ts` has a single OpenAI client on `gpt-5.6-luna` with no fallback.
 ## 2026-08-06 22:25 — the Fitness integration was dead in production
 - `/api/nutrition/suggest` and `/api/nutrition/reserve` were both returning
   `permission denied for function ember_pantry_for_integration`. Guided Training's

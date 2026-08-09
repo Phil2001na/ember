@@ -3,6 +3,7 @@ import {
   stepCountIs,
   streamText,
   tool,
+  type ModelMessage,
   type UIMessage,
 } from "ai";
 import { z } from "zod";
@@ -36,18 +37,26 @@ export async function POST(request: Request) {
 
   const recipe = session.recipe as Recipe;
 
-  // Cache layout (Anthropic): the stable block (persona + kitchen + recipe) gets a
-  // breakpoint; the current-step line changes every advance so it lives in its own
-  // uncached system message; a second breakpoint on the last history message lets
-  // each turn read the previous turns from cache. Gemini ignores the providerOptions.
-  const cacheBreakpoint = {
-    anthropic: { cacheControl: { type: "ephemeral" as const } },
-  };
-
+  // Cache layout. We're on OpenAI (see lib/ai.ts), which caches automatically on
+  // exact prefix match rather than on explicit breakpoints — so the only thing
+  // that matters is keeping the front of the request byte-identical between
+  // turns. The persona + kitchen + recipe block is stable for a whole cook; the
+  // current-step line changes on every advance, so it goes AFTER the history
+  // rather than in the system block, where it would have invalidated the recipe
+  // (a big JSON blob) on every single step.
+  //
+  // The old explicit `anthropic.cacheControl` breakpoints that used to live here
+  // were dead weight — the OpenAI provider drops them.
   const history = await convertToModelMessages(messages);
-  if (history.length > 0) {
-    history[history.length - 1].providerOptions = cacheBreakpoint;
-  }
+
+  const stepNote: ModelMessage = {
+    role: "system",
+    content: `They are currently on step ${currentStep + 1} of ${recipe.steps.length}.`,
+  };
+  const conversation: ModelMessage[] =
+    history.length > 0
+      ? [...history.slice(0, -1), stepNote, history[history.length - 1]]
+      : [stepNote];
 
   const result = streamText({
     model: brain,
@@ -74,14 +83,9 @@ EVERY time you tell them to do something for a length of time ("simmer for 4 min
 "rest it for 10"), call the start_timer tool with that duration — their hands are busy, so
 never make them set a timer themselves. Still say the duration out loud in your reply.
 Skip the tool only for vague durations ("a few seconds", "until golden").`,
-        providerOptions: cacheBreakpoint,
-      },
-      {
-        role: "system",
-        content: `They are currently on step ${currentStep + 1} of ${recipe.steps.length}.`,
       },
     ],
-    messages: history,
+    messages: conversation,
     tools: {
       amend_recipe: tool({
         description:

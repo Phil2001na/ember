@@ -33,6 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# supabase CLI scratch state (local project ref, pooler url)
+supabase/.temp
+
 # vercel
 .vercel
 

@@ -1,11 +1,23 @@
-"use client";
-
 import Link from "next/link";
 import { Activity, ChevronLeft, Palette } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import FitnessConnection from "@/components/FitnessConnection";
+import KitchenPreferences from "@/components/KitchenPreferences";
+import { createClient } from "@/lib/supabase/server";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: preferences } = user
+    ? await supabase
+        .from("kitchen_preferences")
+        .select("id, text")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+    : { data: [] };
+
   return (
     <main className="page fade-in">
       <Link href="/profile" className="icon-btn" style={{ marginBottom: 8 }} aria-label="Back">
@@ -23,6 +35,8 @@ export default function SettingsPage() {
         </p>
         <ThemeToggle />
       </div>
+
+      {user && <KitchenPreferences initialPreferences={preferences ?? []} userId={user.id} />}
 
       {process.env.NEXT_PUBLIC_FITNESS_URL && (
         <>

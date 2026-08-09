@@ -21,11 +21,17 @@ npm run lint
 
 ## Conventions / gotchas
 
-- **AI provider (checked 2026-07-30): this flipped.** Gemini prepayment credits are now
-  *depleted* and Anthropic works, so `BRAIN` is **unset in production** and Claude is the brain.
-  The older "BRAIN=gemini because Anthropic is empty" note no longer holds — check which
-  provider actually has credit before assuming. `lib/ai.ts` exports `spareBrain` (the other
-  provider) for unattended jobs; `/api/nutrition/suggest` tries both before failing.
+- **AI provider (checked 2026-08-09): OpenAI, and there is no `BRAIN` switch any more.**
+  `lib/ai.ts` creates one `createOpenAI` client and exports `brain` = `eyes` =
+  `gpt-5.6-luna`. There is no `spareBrain` and no provider fallback. Earlier notes here
+  claimed Gemini, then Claude — both are wrong; read `lib/ai.ts` rather than this line.
+- **Prompt caching is automatic, not explicit.** OpenAI caches on exact prefix match, so the
+  only thing that buys anything is keeping the front of the request byte-identical between
+  turns: static rules in `instructions`, volatile state (pantry, current step) appended
+  *after* the history. `anthropic.cacheControl` breakpoints do nothing here — the provider
+  drops them. Both chat routes were rewritten this way on 2026-08-09.
+- `reasoningEffort` is a real cost dial (reasoning tokens bill as output), which is why
+  `lib/ai.ts` pins "medium" rather than leaving it high — see the note there.
 - **Fitness integration:** `/api/nutrition/suggest` is a machine-to-machine route used by the
   Guided Training nudge scheduler. It is gated by `FITNESS_INTEGRATION_SECRET` and reads the
   pantry through the `public.ember_pantry_for_integration` RPC — that RPC is Ember's alone to

@@ -1,5 +1,5 @@
 // Bump VERSION to invalidate all caches on the next deploy.
-const VERSION = "v1";
+const VERSION = "v2";
 const STATIC_CACHE = `ember-static-${VERSION}`;
 const PAGE_CACHE = `ember-pages-${VERSION}`;
 const OFFLINE_URL = "/offline";

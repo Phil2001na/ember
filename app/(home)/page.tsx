@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import KitchenChat from "@/components/KitchenChat";
 import { homeNudge } from "@/lib/homeNudge";
+import type { UIMessage } from "ai";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -16,7 +17,7 @@ export default async function HomePage() {
     .maybeSingle();
   if (!profile) redirect("/onboarding");
 
-  const [{ data: pantry }, { data: activeSession }] = await Promise.all([
+  const [{ data: pantry }, { data: activeSession }, { data: recentMessages }] = await Promise.all([
     supabase
       .from("pantry_items")
       .select("name, quantity_text")
@@ -29,6 +30,12 @@ export default async function HomePage() {
       .order("started_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("kitchen_messages")
+      .select("id, role, parts")
+      .eq("user_id", user!.id)
+      .order("created_at", { ascending: false })
+      .limit(40),
   ]);
 
   const windhoekParts = Object.fromEntries(
@@ -50,6 +57,9 @@ export default async function HomePage() {
     <KitchenChat
       greeting={`${greeting}${profile.display_name ? `, ${profile.display_name}` : ""}`}
       pantryEmpty={!pantry?.length}
+      initialMessages={((recentMessages ?? [])
+        .reverse()
+        .map((message) => ({ id: message.id, role: message.role, parts: message.parts })) as UIMessage[])}
       nudge={homeNudge(hour, pantry ?? [], dayKey)}
       activeSession={
         activeSession
