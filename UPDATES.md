@@ -1,5 +1,9 @@
 # Ember — update log
 
+## 2026-08-10 00:45
+- Added one-tap post-cook feedback (would cook again, loved it, too spicy, took too long) stored per completed cook; future suggestions use it as a dish-specific, non-permanent signal.
+- Added a New conversation control at home and Clear chat history in Settings. Both preserve pantry, recipes, and confirmed cooking preferences.
+
 ## 2026-08-09 20:18
 - Added durable, per-kitchen home-chat history: the last 40 turns now survive reloads and device hand-off, while image pixels are retained only for the turn that needs them.
 - Added editable, explicit cooking preferences in Settings plus remember/forget chat tools; Ember receives these as confirmed instructions, never inferred personality facts.

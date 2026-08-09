@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { Brain, Plus, X } from "lucide-react";
+import { Brain, MessageSquareText, Plus, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type Preference = { id: string; text: string };
@@ -84,6 +84,39 @@ export default function KitchenPreferences({ initialPreferences, userId }: { ini
           </button>
         </form>
         {error && <p style={{ color: "var(--red-warn)", fontSize: "0.82rem", marginTop: 10 }}>{error}</p>}
+      </div>
+    </>
+  );
+}
+
+export function ChatHistoryControls({ userId }: { userId: string }) {
+  const supabase = createClient();
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  async function clearHistory() {
+    if (busy) return;
+    if (!window.confirm("Clear all kitchen-chat history? Ember will keep your pantry, saved recipes, and preferences.")) return;
+    setBusy(true);
+    setNotice(null);
+    const { error } = await supabase.from("kitchen_messages").delete().eq("user_id", userId);
+    setBusy(false);
+    setNotice(error ? "Couldn't clear chat history yet." : "Chat history cleared. Your kitchen details are still here.");
+  }
+
+  return (
+    <>
+      <div className="section-head">
+        <MessageSquareText /> Chat history
+      </div>
+      <div className="card" style={{ marginBottom: 24 }}>
+        <p style={{ color: "var(--text-dim)", fontSize: "0.88rem", marginBottom: 14 }}>
+          Clear the conversations Ember keeps for continuity. This doesn&apos;t affect your pantry, recipes, or preferences.
+        </p>
+        <button className="btn btn-ghost" onClick={clearHistory} disabled={busy}>
+          <Trash2 size={16} /> {busy ? "Clearingâ€¦" : "Clear chat history"}
+        </button>
+        {notice && <p style={{ color: "var(--text-dim)", fontSize: "0.82rem", marginTop: 10 }}>{notice}</p>}
       </div>
     </>
   );

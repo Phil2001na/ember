@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Activity, ChevronLeft, Palette } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import FitnessConnection from "@/components/FitnessConnection";
-import KitchenPreferences from "@/components/KitchenPreferences";
+import KitchenPreferences, { ChatHistoryControls } from "@/components/KitchenPreferences";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function SettingsPage() {
@@ -37,6 +37,7 @@ export default async function SettingsPage() {
       </div>
 
       {user && <KitchenPreferences initialPreferences={preferences ?? []} userId={user.id} />}
+      {user && <ChatHistoryControls userId={user.id} />}
 
       {process.env.NEXT_PUBLIC_FITNESS_URL && (
         <>
