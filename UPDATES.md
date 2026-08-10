@@ -1,5 +1,11 @@
 # Ember — update log
 
+## 2026-08-10 11:25
+- Fixed mojibake in the Settings "Clear chat history" button: the busy label read
+  `Clearingâ€¦`. The bytes were `C3 A2 E2 82 AC C2 A6` — a UTF-8 ellipsis re-encoded
+  through latin-1 — now a single `E2 80 A6` (U+2026), matching the literal `…` used in
+  every other UI string. It was the only instance in `app/`, `components/` and `lib/`.
+
 ## 2026-08-10 10:47 — both chat routes were making no model call at all
 - Since the 08-09 cache rework, `cook` and `kitchen-chat` put their volatile state
   (`stepNote`, `pantryContext`) in a `role: "system"` message inside `messages`. The AI

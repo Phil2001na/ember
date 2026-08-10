@@ -114,7 +114,7 @@ export function ChatHistoryControls({ userId }: { userId: string }) {
           Clear the conversations Ember keeps for continuity. This doesn&apos;t affect your pantry, recipes, or preferences.
         </p>
         <button className="btn btn-ghost" onClick={clearHistory} disabled={busy}>
-          <Trash2 size={16} /> {busy ? "Clearingâ€¦" : "Clear chat history"}
+          <Trash2 size={16} /> {busy ? "Clearing…" : "Clear chat history"}
         </button>
         {notice && <p style={{ color: "var(--text-dim)", fontSize: "0.82rem", marginTop: 10 }}>{notice}</p>}
       </div>
