@@ -13,12 +13,16 @@ import {
   Check,
   ChevronRight,
   CircleCheck,
+  Clock3,
   Eye,
   Flame,
+  Heart,
   Home,
   MessageCircle,
   Share2,
   ShoppingBasket,
+  ThumbsDown,
+  ThumbsUp,
   Volume2,
   VolumeX,
 } from "lucide-react";
@@ -65,6 +69,11 @@ export default function CookClient({
   const [usedUpChecking, setUsedUpChecking] = useState(false);
   const [deselected, setDeselected] = useState<Set<string>>(new Set());
   const [pantryUpdated, setPantryUpdated] = useState(false);
+  const [wouldCookAgain, setWouldCookAgain] = useState<boolean | null>(null);
+  const [feedbackSignals, setFeedbackSignals] = useState<string[]>([]);
+  const [feedbackSaving, setFeedbackSaving] = useState(false);
+  const [feedbackSaved, setFeedbackSaved] = useState(false);
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const [fitnessRequestId] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
     try {
@@ -319,6 +328,38 @@ export default function CookClient({
     }
   }
 
+  function toggleFeedbackSignal(signal: string) {
+    setFeedbackSaved(false);
+    setFeedbackSignals((current) =>
+      current.includes(signal) ? current.filter((item) => item !== signal) : [...current, signal]
+    );
+  }
+
+  async function saveFeedback() {
+    if (wouldCookAgain === null || feedbackSaving) return;
+    setFeedbackSaving(true);
+    setFeedbackError(null);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setFeedbackSaving(false);
+      return setFeedbackError("Ember couldn't save that just now.");
+    }
+    const { error } = await supabase.from("cook_feedback").upsert(
+      {
+        user_id: user.id,
+        cook_session_id: sessionId,
+        would_cook_again: wouldCookAgain,
+        signals: feedbackSignals,
+      },
+      { onConflict: "user_id,cook_session_id" }
+    );
+    setFeedbackSaving(false);
+    if (error) return setFeedbackError("Couldn't save that feedback yet.");
+    setFeedbackSaved(true);
+  }
+
   if (done) {
     return (
       <main className="page fade-in" style={{ display: "flex", flexDirection: "column", justifyContent: "center", textAlign: "center", minHeight: "100dvh", paddingBottom: 40 }}>
@@ -338,6 +379,52 @@ export default function CookClient({
             <h3>Great work!</h3>
             <p>Hope you enjoyed the process as much as the meal.</p>
           </div>
+        </div>
+
+        <div className="card fade-in" style={{ textAlign: "left", marginBottom: 20, borderColor: feedbackSaved ? "var(--green-ok)" : "var(--border-strong)" }}>
+          <h3 style={{ fontSize: "0.98rem", marginBottom: 4, fontFamily: "var(--font-ui)", fontWeight: 600 }}>
+            Help Ember get better
+          </h3>
+          <p style={{ color: "var(--text-dim)", fontSize: "0.82rem", marginBottom: 12 }}>
+            Would you make {recipe.title} again?
+          </p>
+          <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+            <button
+              className={`chip ${wouldCookAgain === true ? "selected" : ""}`}
+              onClick={() => { setWouldCookAgain(true); setFeedbackSaved(false); }}
+            >
+              <ThumbsUp size={15} /> Absolutely
+            </button>
+            <button
+              className={`chip ${wouldCookAgain === false ? "selected" : ""}`}
+              onClick={() => { setWouldCookAgain(false); setFeedbackSaved(false); }}
+            >
+              <ThumbsDown size={15} /> Not really
+            </button>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+            {[
+              { value: "loved_it", label: "Loved it", Icon: Heart },
+              { value: "took_too_long", label: "Took too long", Icon: Clock3 },
+              { value: "too_spicy", label: "Too spicy", Icon: Flame },
+            ].map(({ value, label, Icon }) => (
+              <button
+                key={value}
+                className={`chip ${feedbackSignals.includes(value) ? "selected" : ""}`}
+                onClick={() => toggleFeedbackSignal(value)}
+              >
+                <Icon size={14} /> {label}
+              </button>
+            ))}
+          </div>
+          {feedbackSaved ? (
+            <p style={{ color: "var(--green-ok)", fontSize: "0.82rem" }}><Check size={14} style={{ verticalAlign: "-2px" }} /> Ember will use that for future ideas.</p>
+          ) : (
+            <button className="btn btn-ghost" onClick={saveFeedback} disabled={wouldCookAgain === null || feedbackSaving}>
+              {feedbackSaving ? <span className="spinner" /> : "Save feedback"}
+            </button>
+          )}
+          {feedbackError && <p style={{ color: "var(--red-warn)", fontSize: "0.82rem", marginTop: 8 }}>{feedbackError}</p>}
         </div>
 
         {usedUpChecking && (

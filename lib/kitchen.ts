@@ -9,6 +9,7 @@ export type KitchenContext = {
   shoppingList: string[];
   preferences: string[];
   recentCooked: string[];
+  recentFeedback: { title: string; wouldCookAgain: boolean; signals: string[] }[];
 };
 
 /** Loads everything the AI needs to know about this user's kitchen. */
@@ -19,7 +20,7 @@ export async function loadKitchen(): Promise<KitchenContext | null> {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ data: profile }, { data: equipment }, { data: pantry }, { data: shopping }, { data: preferences }, { data: recentSessions }] =
+  const [{ data: profile }, { data: equipment }, { data: pantry }, { data: shopping }, { data: preferences }, { data: recentSessions }, { data: feedback }] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -39,12 +40,26 @@ export async function loadKitchen(): Promise<KitchenContext | null> {
         .order("created_at", { ascending: false }),
       supabase
         .from("cook_sessions")
-        .select("recipe")
+        .select("id, recipe")
         .eq("user_id", user.id)
         .eq("status", "completed")
         .order("completed_at", { ascending: false })
         .limit(5),
+      supabase
+        .from("cook_feedback")
+        .select("cook_session_id, would_cook_again, signals")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(12),
     ]);
+
+  const recentCooked =
+    recentSessions
+      ?.map((s) => ({ id: s.id, title: (s.recipe as { title?: string } | null)?.title }))
+      .filter((session): session is { id: string; title: string } => Boolean(session.title)) ?? [];
+  const feedbackBySession = new Map(
+    (feedback ?? []).map((entry) => [entry.cook_session_id, entry])
+  );
 
   return {
     userId: user.id,
@@ -54,10 +69,13 @@ export async function loadKitchen(): Promise<KitchenContext | null> {
     pantry: pantry ?? [],
     shoppingList: shopping?.map((s) => s.name) ?? [],
     preferences: preferences?.map((p) => p.text) ?? [],
-    recentCooked:
-      recentSessions
-        ?.map((s) => (s.recipe as { title?: string } | null)?.title)
-        .filter((title): title is string => Boolean(title)) ?? [],
+    recentCooked: recentCooked.map((session) => session.title),
+    recentFeedback: recentCooked.flatMap((session) => {
+      const entry = feedbackBySession.get(session.id);
+      return entry
+        ? [{ title: session.title, wouldCookAgain: entry.would_cook_again, signals: entry.signals ?? [] }]
+        : [];
+    }),
   };
 }
 
@@ -74,5 +92,17 @@ THEIR SHOPPING LIST (planning to buy, they do NOT have these yet): ${
     k.shoppingList.join(", ") || "empty"
   }.
 THEIR CONFIRMED COOKING PREFERENCES: ${k.preferences.length ? k.preferences.map((p) => `"${p}"`).join("; ") : "none yet"}.
-RECENTLY COOKED: ${k.recentCooked.join(", ") || "nothing recorded yet"}.`;
+RECENTLY COOKED: ${k.recentCooked.join(", ") || "nothing recorded yet"}.
+RECENT COOK FEEDBACK: ${
+    k.recentFeedback.length
+      ? k.recentFeedback
+          .map(
+            (f) =>
+              `${f.title}: ${f.wouldCookAgain ? "would cook again" : "would not cook again"}${
+                f.signals.length ? ` (${f.signals.map((s) => s.replaceAll("_", " ")).join(", ")})` : ""
+              }`
+          )
+          .join("; ")
+      : "none yet"
+  }.`;
 }

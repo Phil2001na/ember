@@ -16,6 +16,11 @@
   `ai@7.0.14`: empty stream without the flag, correct answer with it. Money Guide and
   Guided Training had the identical bug from the same day's rework.
 
+## 2026-08-10 00:45
+- Added one-tap post-cook feedback (would cook again, loved it, too spicy, took too long) stored per completed cook; future suggestions use it as a dish-specific, non-permanent signal.
+- Added a New conversation control at home and Clear chat history in Settings. Both preserve pantry, recipes, and confirmed cooking preferences.
+- Merged to `master` and released on 2026-08-10 11:0x — it had been sitting unmerged on `agent/ember-feedback-controls`, so none of it was in production. `ember.cook_feedback` was already applied to the shared project during the branch work (verified: table, columns and RLS policy all match `20260809224115_cook_feedback.sql`), so the release was code-only.
+
 ## 2026-08-09 20:18
 - Added durable, per-kitchen home-chat history: the last 40 turns now survive reloads and device hand-off, while image pixels are retained only for the turn that needs them.
 - Added editable, explicit cooking preferences in Settings plus remember/forget chat tools; Ember receives these as confirmed instructions, never inferred personality facts.

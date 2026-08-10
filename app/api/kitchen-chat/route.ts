@@ -113,6 +113,9 @@ list ingredients they have on hand that aren't in the pantry yet, add those too.
 Treat CONFIRMED COOKING PREFERENCES as durable instructions from the cook. Recently
 cooked dishes are only a gentle anti-repeat signal: don't offer the same meal again
 unless they ask for it, and don't infer a new preference from one meal.
+RECENT COOK FEEDBACK is an explicit signal about that specific dish and experience:
+avoid repeating a dish they disliked, and address a named issue (for example, a faster
+or milder version) when it is relevant. Never turn one meal's feedback into a broad rule.
 
 They also keep a shopping list (shown above). When they say they NEED something
 they don't have ("I need to buy parmesan", "put milk on the list"), or a dish

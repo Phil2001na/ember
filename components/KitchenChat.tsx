@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { ArrowUp, Brain, CookingPot, Flame, ImagePlus, ShoppingBasket, ShoppingCart, X } from "lucide-react";
+import { ArrowUp, Brain, CookingPot, Flame, ImagePlus, MessageSquarePlus, ShoppingBasket, ShoppingCart, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Recipe, Suggestion } from "@/lib/schemas";
 import RecipePreview from "@/components/RecipePreview";
@@ -124,7 +124,7 @@ export default function KitchenChat({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, setMessages, status } = useChat({
     messages: initialMessages,
     transport: new DefaultChatTransport({ api: "/api/kitchen-chat" }),
   });
@@ -145,6 +145,19 @@ export default function KitchenChat({
 
   function removeAttachment(idx: number) {
     setAttachments((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  async function startNewConversation() {
+    if (!messages.length || busy) return;
+    if (!window.confirm("Start a new conversation? This clears the current chat history, but keeps your pantry and preferences.")) return;
+    setGenError(null);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return setGenError("Ember couldn't clear this chat just now.");
+    const { error } = await supabase.from("kitchen_messages").delete().eq("user_id", user.id);
+    if (error) return setGenError("Ember couldn't clear this chat just now.");
+    setMessages([]);
   }
 
   async function submit(e: React.FormEvent) {
@@ -257,9 +270,16 @@ export default function KitchenChat({
       }}
     >
       <div style={{ padding: "20px 18px 10px", paddingTop: "calc(20px + env(safe-area-inset-top))" }}>
-        <h1 className="page-title title-glow" style={{ fontSize: "1.35rem", marginBottom: activeSession ? 8 : 0, display: "flex", alignItems: "center", gap: 8 }}>
-          {greeting} <Flame size={20} style={{ color: "var(--accent-icon)", flexShrink: 0 }} />
-        </h1>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <h1 className="page-title title-glow" style={{ fontSize: "1.35rem", marginBottom: activeSession ? 8 : 0, display: "flex", alignItems: "center", gap: 8 }}>
+            {greeting} <Flame size={20} style={{ color: "var(--accent-icon)", flexShrink: 0 }} />
+          </h1>
+          {messages.length > 0 && (
+            <button className="icon-btn" onClick={startNewConversation} disabled={busy} aria-label="Start a new conversation" title="New conversation">
+              <MessageSquarePlus size={18} />
+            </button>
+          )}
+        </div>
         {activeSession && (
           <Link href={`/cook/${activeSession.id}`} className="badge badge-accent" style={{ display: "inline-flex" }}>
             <CookingPot /> Resume {activeSession.title} — step {activeSession.step + 1}
