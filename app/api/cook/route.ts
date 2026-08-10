@@ -86,6 +86,12 @@ Skip the tool only for vague durations ("a few seconds", "until golden").`,
       },
     ],
     messages: conversation,
+    // `stepNote` is a system message sitting inside `messages`, which the AI SDK
+    // rejects by default (`allowSystemInMessages` defaults to false) — it throws
+    // InvalidPromptError before the request ever leaves the process. The
+    // mid-conversation placement is the whole point of the cache layout above,
+    // so opt in rather than move it back into `instructions`.
+    allowSystemInMessages: true,
     tools: {
       amend_recipe: tool({
         description:
