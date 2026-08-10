@@ -1,5 +1,21 @@
 # Ember — update log
 
+## 2026-08-10 10:47 — both chat routes were making no model call at all
+- Since the 08-09 cache rework, `cook` and `kitchen-chat` put their volatile state
+  (`stepNote`, `pantryContext`) in a `role: "system"` message inside `messages`. The AI
+  SDK refuses that: `allowSystemInMessages` defaults to `false`, so `streamText` threw
+  `AI_InvalidPromptError` — "System messages are not allowed in the prompt or messages
+  fields" — before a request ever left the process.
+- It fails **quietly**. The error surfaces inside the stream rather than as a throw, so
+  the client saw an empty reply, not an error. That's why it read as "the AI just stopped
+  working" rather than as a crash.
+- Fixed by opting in with `allowSystemInMessages: true` in both routes. The
+  mid-conversation placement is the entire point of the cache layout, so the flag is the
+  right fix rather than moving the state back into `instructions`.
+- Reproduced and verified against the live OpenAI key on Ember's own installed
+  `ai@7.0.14`: empty stream without the flag, correct answer with it. Money Guide and
+  Guided Training had the identical bug from the same day's rework.
+
 ## 2026-08-09 20:18
 - Added durable, per-kitchen home-chat history: the last 40 turns now survive reloads and device hand-off, while image pixels are retained only for the turn that needs them.
 - Added editable, explicit cooking preferences in Settings plus remember/forget chat tools; Ember receives these as confirmed instructions, never inferred personality facts.
