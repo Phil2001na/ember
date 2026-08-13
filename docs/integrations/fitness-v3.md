@@ -17,9 +17,13 @@ just ones Fitness asked for.
 - `POST /api/nutrition/log` — session-authenticated (reads the caller's own
   Supabase session, not a shared secret). Looks up the *actual* finished
   `cook_sessions` row for the caller (RLS-scoped, so a stray id 404s rather
-  than leaking someone else's cook), infers the outcome from the recipe that
-  was really cooked (`inferMealOutcome`, same function V1/V2 already use), and
-  — only if `fitness_auto_log` is on — relays it to Fitness server-to-server.
+  than leaking someone else's cook), and — only if `fitness_auto_log` is on —
+  relays the dish to Fitness server-to-server as `title` + `servings` +
+  `ingredients`, with **no kcal figure**. Fitness estimates the numbers on
+  receipt; see "Who computes the numbers" in Fitness's copy of this contract.
+  This path used to call `inferMealOutcome`, which bucketed by cook time and so
+  measured effort rather than energy. That helper still backs V1/V2, where
+  Fitness supplies a real kcal hint.
 - The finish-cook screen (`CookClient.tsx`) now shows an "I ate this" card
   whenever `fitness_auto_log` is on, even with no `request_id` in play. Unlike
   V1/V2 this doesn't navigate the browser to Fitness — it's a background POST,
@@ -32,7 +36,7 @@ secret never reaches the browser, and there's no `request_id` traveling in a
 URL to forge, because the caller is authenticated by their own Ember session
 and the request_id Ember generates never leaves the server-to-server call.
 
-## What Fitness still needs to implement
+## Fitness's side (implemented — `fitness_ember_log_food`, migration `004_ember_meal_log.sql`)
 
 **`POST {FITNESS_URL}/api/nutrition/log`**
 Header: `x-integration-secret: <shared secret>` — a **new** secret, not the

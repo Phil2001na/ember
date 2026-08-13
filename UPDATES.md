@@ -1,5 +1,21 @@
 # Ember — update log
 
+## 2026-08-13 15:31
+- Applied `005_fitness_auto_log.sql` to the shared project — `ember.profiles
+  .fitness_auto_log` existed only as an unapplied migration file, so the Settings
+  toggle's upsert errored and the switch always read back off. Verified Ember's client
+  is pinned to `db: { schema: "ember" }`, so the migration's `alter table ember.profiles`
+  targets the table the app actually reads (there are four `profiles` tables on this
+  project — `ember`, `fitness`, `public`, `trim`).
+- Rewrote `app/api/nutrition/log/route.ts` to speak V3: it sent `v: 2` and Fitness
+  rejects anything that isn't `v === 3` with a 400, so the standing link had never
+  logged a single meal. Now sends `cook_session_id`, `title`, `servings` and the
+  ingredient list, and deliberately **no** kcal figure — Fitness estimates from the
+  ingredients, which distinguish a ten-minute steak from a ten-minute salad; the old
+  `inferMealOutcome` bucketing by cook time could not.
+- `inferMealOutcome` stays — `CookClient.tsx` still uses it for the V1/V2 browser
+  handoff, where Fitness passes a real kcal hint and the heuristic isn't load-bearing.
+
 ## 2026-08-10 11:25
 - Fixed mojibake in the Settings "Clear chat history" button: the busy label read
   `Clearingâ€¦`. The bytes were `C3 A2 E2 82 AC C2 A6` — a UTF-8 ellipsis re-encoded

@@ -1,7 +1,5 @@
-import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { inferMealOutcome } from "@/lib/fitnessHandoff";
 import type { Recipe } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
@@ -53,24 +51,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "not-found" }, { status: 404 });
   }
 
-  const outcome = inferMealOutcome(session.recipe as Recipe, randomUUID());
+  const recipe = session.recipe as Recipe;
 
+  // Ember reports what was cooked; Fitness works out what it costs. We send no
+  // kcal figure on purpose — the old `inferMealOutcome` heuristic bucketed by
+  // cook time, which measures effort, not energy (a ten-minute steak and a
+  // ten-minute salad both scored 250). Fitness estimates from these ingredients
+  // with the same model it uses for a typed-in meal.
   let res: Response;
   try {
     res = await fetch(new URL("/api/nutrition/log", fitnessBase), {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-integration-secret": secret },
       body: JSON.stringify({
-        v: 2,
+        v: 3,
         ember_user_id: user.id,
-        request_id: outcome.requestId,
-        eaten: outcome.eaten,
-        size: outcome.size,
-        protein_anchor: outcome.proteinAnchor,
-        confidence: outcome.confidence,
-        kcal: outcome.kcal,
-        protein_g: outcome.proteinG,
-        title: outcome.title,
+        cook_session_id: sessionId,
+        title: recipe.title,
+        servings: recipe.servings,
+        ingredients: recipe.ingredients.map((i) => `${i.amount} ${i.item}`.trim()),
       }),
     });
   } catch {
