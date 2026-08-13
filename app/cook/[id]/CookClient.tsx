@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
@@ -25,6 +25,7 @@ import {
   ThumbsUp,
   Volume2,
   VolumeX,
+  Waves,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { applyAmendment } from "@/lib/recipe";
@@ -33,7 +34,10 @@ import StepCard from "@/components/StepCard";
 import TimerBar from "@/components/TimerBar";
 import ChatDrawer from "@/components/ChatDrawer";
 import PushToTalk from "@/components/PushToTalk";
+import VoiceCook from "@/components/VoiceCook";
 import AddToHome from "@/components/AddToHome";
+import { cancelSpeech, speak, unlockSpeech } from "@/lib/speech";
+import { transcriptionHint } from "@/lib/cookNarration";
 import { useCookTimers } from "@/lib/useCookTimers";
 import { shareSavedRecipe } from "@/lib/shareRecipe";
 import { buildFitnessReturnUrl, inferMealOutcome } from "@/lib/fitnessHandoff";
@@ -57,6 +61,7 @@ export default function CookClient({
   const [stepIdx, setStepIdx] = useState(Math.min(initialStep, initialRecipe.steps.length - 1));
   const [done, setDone] = useState(initialStatus === "completed");
   const [chatOpen, setChatOpen] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(false);
   const [speakReplies, setSpeakReplies] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savedRecipeId, setSavedRecipeId] = useState<string | null>(null);
@@ -92,7 +97,13 @@ export default function CookClient({
   const appliedTools = useRef<Set<string>>(new Set());
   const stepRef = useRef(stepIdx);
   stepRef.current = stepIdx;
+  const voiceModeRef = useRef(voiceMode);
   const cookTimers = useCookTimers(`ember-timers-${sessionId}`, `/cook/${sessionId}`);
+
+  // the chat transport reads this when building a request, long after render
+  useEffect(() => {
+    voiceModeRef.current = voiceMode;
+  }, [voiceMode]);
 
   // Standing link (docs/integrations/fitness-v3.md): only relevant for cooks
   // that didn't start from a Fitness nudge — those already get the V1/V2 flow.
@@ -155,7 +166,11 @@ export default function CookClient({
     messages: initialMessages,
     transport: new DefaultChatTransport({
       api: "/api/cook",
-      body: () => ({ sessionId, currentStep: stepRef.current }),
+      body: () => ({
+        sessionId,
+        currentStep: stepRef.current,
+        voice: voiceModeRef.current,
+      }),
     }),
   });
 
@@ -176,53 +191,81 @@ export default function CookClient({
     };
   }, []);
 
-  // apply tool calls arriving in the chat stream (recipe amendments, timers)
+  const goTo = useCallback(
+    (idx: number) => {
+      const clamped = Math.max(0, Math.min(idx, recipe.steps.length - 1));
+      setStepIdx(clamped);
+      supabase
+        .from("cook_sessions")
+        .update({ current_step: clamped })
+        .eq("id", sessionId)
+        .then(() => {});
+    },
+    [recipe.steps.length, sessionId, supabase]
+  );
+
+  // apply tool calls arriving in the chat stream (amendments, timers, navigation)
   const startTimer = cookTimers.start;
   useEffect(() => {
     for (const m of messages) {
       for (const part of m.parts) {
+        // note: no `!part.input` guard — the navigation tools take no
+        // arguments, so their input is an empty object and would be skipped
         if (
           !("toolCallId" in part) ||
           !("input" in part) ||
-          !part.input ||
           appliedTools.current.has(part.toolCallId) ||
           (part.state !== "output-available" && part.state !== "input-available")
         )
           continue;
         if (part.type === "tool-amend_recipe") {
           appliedTools.current.add(part.toolCallId);
-          const input = part.input as { remaining_steps: RecipeStep[] };
+          const input = (part.input ?? {}) as { remaining_steps: RecipeStep[] };
           if (input.remaining_steps?.length) {
             setRecipe((r) => applyAmendment(r, input.remaining_steps));
           }
         } else if (part.type === "tool-start_timer") {
           appliedTools.current.add(part.toolCallId);
-          const input = part.input as { minutes: number; label: string };
+          const input = (part.input ?? {}) as { minutes: number; label: string };
           if (input.minutes > 0) {
             startTimer(stepRef.current, input.minutes, input.label);
           }
+        } else if (part.type === "tool-next_step") {
+          appliedTools.current.add(part.toolCallId);
+          goTo(stepRef.current + 1);
+        } else if (part.type === "tool-previous_step") {
+          appliedTools.current.add(part.toolCallId);
+          goTo(stepRef.current - 1);
+        } else if (part.type === "tool-go_to_step") {
+          appliedTools.current.add(part.toolCallId);
+          const input = (part.input ?? {}) as { step_number: number };
+          if (Number.isFinite(input.step_number)) goTo(input.step_number - 1);
         }
       }
     }
-  }, [messages, startTimer]);
+  }, [messages, startTimer, goTo]);
 
-  // speak finished replies aloud when voice mode is on
-  useEffect(() => {
-    if (status !== "ready" || !speakRepliesRef.current) return;
+  // the finished assistant turn, for whichever surface is doing the talking
+  const reply = useMemo(() => {
     const last = messages[messages.length - 1];
-    if (!last || last.role !== "assistant" || spokenIds.current.has(last.id)) return;
-    spokenIds.current.add(last.id);
+    if (!last || last.role !== "assistant") return null;
     const text = last.parts
       .filter((p): p is Extract<typeof p, { type: "text" }> => p.type === "text")
       .map((p) => p.text)
-      .join(" ");
-    if (text && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.05;
-      window.speechSynthesis.speak(utterance);
-    }
-  }, [status, messages]);
+      .join(" ")
+      .trim();
+    return text ? { id: last.id, text } : null;
+  }, [messages]);
+
+  // speak finished replies aloud when the chat drawer's speaker toggle is on.
+  // Voice mode does its own speaking (it has to sequence narration against
+  // replies), so stay out of its way.
+  useEffect(() => {
+    if (status !== "ready" || voiceMode || !speakRepliesRef.current) return;
+    if (!reply || spokenIds.current.has(reply.id)) return;
+    spokenIds.current.add(reply.id);
+    speak(reply.text);
+  }, [status, reply, voiceMode]);
 
   // persist chat after each completed exchange
   const lastSaved = useRef(initialMessages.length);
@@ -237,20 +280,9 @@ export default function CookClient({
     }
   }, [status, messages, sessionId, supabase]);
 
-  const goTo = useCallback(
-    (idx: number) => {
-      const clamped = Math.max(0, Math.min(idx, recipe.steps.length - 1));
-      setStepIdx(clamped);
-      supabase
-        .from("cook_sessions")
-        .update({ current_step: clamped })
-        .eq("id", sessionId)
-        .then(() => {});
-    },
-    [recipe.steps.length, sessionId, supabase]
-  );
-
   async function finish() {
+    cancelSpeech();
+    setVoiceMode(false);
     setDone(true);
     setUsedUpChecking(true);
     try {
@@ -648,14 +680,48 @@ export default function CookClient({
         )}
       </div>
 
-      {/* chat handle */}
-      <button
-        className="btn btn-ghost btn-full"
-        style={{ marginTop: 10 }}
-        onClick={() => setChatOpen(true)}
-      >
-        <MessageCircle /> Ask Ember anything
-      </button>
+      {/* hands-free + chat handles */}
+      <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+        <button
+          className="btn btn-ghost"
+          style={{ flex: 1 }}
+          onClick={() => {
+            // must happen inside the tap: iOS won't speak later otherwise
+            unlockSpeech();
+            setChatOpen(false);
+            setVoiceMode(true);
+          }}
+        >
+          <Waves /> Hands-free
+        </button>
+        <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setChatOpen(true)}>
+          <MessageCircle /> Ask Ember
+        </button>
+      </div>
+
+      {voiceMode && (
+        <VoiceCook
+          recipe={recipe}
+          stepIdx={stepIdx}
+          timers={cookTimers.timers}
+          busy={status === "submitted" || status === "streaming"}
+          reply={status === "ready" ? reply : null}
+          onAsk={(text) => sendMessage({ text })}
+          onNext={() => goTo(stepIdx + 1)}
+          onPrev={() => goTo(stepIdx - 1)}
+          onStartTimer={cookTimers.start}
+          onToggleTimer={cookTimers.toggle}
+          onFinish={finish}
+          onReadMode={() => {
+            cancelSpeech();
+            setVoiceMode(false);
+          }}
+          onExit={() => {
+            cancelSpeech();
+            setVoiceMode(false);
+          }}
+        />
+      )}
 
       <ChatDrawer
         open={chatOpen}
@@ -669,6 +735,7 @@ export default function CookClient({
         extraControls={
           <>
             <PushToTalk
+              hint={transcriptionHint(recipe)}
               disabled={status === "submitted" || status === "streaming"}
               onTranscript={(text) => {
                 setMicNotice(null);
@@ -684,7 +751,7 @@ export default function CookClient({
               style={{ opacity: speakReplies ? 1 : 0.45 }}
               onClick={() => {
                 setSpeakReplies((s) => {
-                  if (s) window.speechSynthesis?.cancel();
+                  if (s) cancelSpeech();
                   return !s;
                 });
               }}

@@ -25,7 +25,8 @@ export async function POST(request: Request) {
     sessionId,
     messages,
     currentStep,
-  }: { sessionId: string; messages: UIMessage[]; currentStep: number } =
+    voice = false,
+  }: { sessionId: string; messages: UIMessage[]; currentStep: number; voice?: boolean } =
     await request.json();
 
   const { data: session } = await supabase
@@ -49,9 +50,24 @@ export async function POST(request: Request) {
   // were dead weight — the OpenAI provider drops them.
   const history = await convertToModelMessages(messages);
 
+  // Voice guidance rides along with the step note rather than going into
+  // `instructions`, so the cached prefix stays byte-identical whether or not
+  // voice mode is on — toggling it mid-cook costs nothing.
   const stepNote: ModelMessage = {
     role: "system",
-    content: `They are currently on step ${currentStep + 1} of ${recipe.steps.length}.`,
+    content: [
+      `They are currently on step ${currentStep + 1} of ${recipe.steps.length}.`,
+      voice &&
+        `They are in VOICE MODE: this reply will be READ ALOUD and they are not looking at the screen.
+Keep it to 1-2 short sentences. No lists, no numbers-as-digits where a word reads better,
+no markdown, no "as I mentioned". Say the one thing they need right now.
+Always end by telling them what you're waiting for — "say go when it's in", "say next when
+you're there" — so they know the turn is theirs.
+When they tell you they've finished a step or want to move on, call next_step (or
+previous_step / go_to_step) — their hands are busy and they cannot tap anything.`,
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
   };
   const conversation: ModelMessage[] =
     history.length > 0
@@ -124,6 +140,32 @@ Skip the tool only for vague durations ("a few seconds", "until golden").`,
         // The countdown itself runs client-side (CookClient watches for this
         // tool part); this just acknowledges so the model can keep talking.
         execute: async () => ({ started: true }),
+      }),
+      // Navigation. In voice mode these are the only way the cook can move
+      // through the recipe at all, so they matter more than they look —
+      // the client applies them the same way it applies start_timer.
+      next_step: tool({
+        description:
+          "Move the cook forward to the next step. Call this whenever they say they've finished the current step or want to move on.",
+        inputSchema: z.object({}),
+        execute: async () => ({ moved: "next" }),
+      }),
+      previous_step: tool({
+        description:
+          "Move the cook back to the previous step, e.g. when they missed something or want to hear it again.",
+        inputSchema: z.object({}),
+        execute: async () => ({ moved: "previous" }),
+      }),
+      go_to_step: tool({
+        description:
+          "Jump to a specific step number when they name one ('take me back to step 3').",
+        inputSchema: z.object({
+          step_number: z
+            .number()
+            .int()
+            .describe(`The step to jump to, 1-based (1 to ${recipe.steps.length})`),
+        }),
+        execute: async () => ({ moved: "jump" }),
       }),
     },
     stopWhen: stepCountIs(3),

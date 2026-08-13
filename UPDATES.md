@@ -1,5 +1,46 @@
 # Ember — update log
 
+## 2026-08-13 16:40 — speech-to-text was dead
+- **`/api/transcribe` moved from Groq to OpenAI.** The Groq key returns `401 Invalid
+  API Key` (verified against the live endpoint), so every utterance 502'd — voice input
+  had no ear at all, which would have made the voice mode below completely deaf. Now
+  `gpt-4o-mini-transcribe` on the existing `OPENAI_API_KEY`. `GROQ_API_KEY` is no longer
+  used anywhere; noted as retired in `.env.example`.
+- Added `language: "en"` — it was auto-detecting on every clip, and detection flips on
+  one-word utterances ("go") over pan noise — plus a recipe-derived `prompt` biasing the
+  transcriber toward the actual ingredient names and the command vocabulary.
+- **Guarded prompt echo.** These models return the prompt verbatim as the transcript when
+  the audio is silence or noise (reproduced live). Every hint is prefixed with a sentinel
+  and any transcript containing it is dropped as no-speech — otherwise a mic that opens
+  itself in a noisy kitchen would bill a fabricated question to the model.
+
+## 2026-08-13 16:15
+- **Voice mode phase 1 — hands-free cook.** New `components/VoiceCook.tsx`: a second
+  face on the same cook session (shared `stepIdx`, timers and chat), reachable from the
+  new "Hands-free" button on the cook screen. Read mode is untouched and one tap away.
+- The model can finally *move* through a recipe: `next_step` / `previous_step` /
+  `go_to_step` tools in `app/api/cook/route.ts`, applied client-side exactly like
+  `start_timer`. Without these, voice mode would still need a hand on the Next button.
+- **Narration is deterministic, not generated.** `lib/cookNarration.ts` builds the spoken
+  step straight from the recipe JSON (`instruction`, `heat`/`oven_temp_c`, `watch_for`,
+  `timer_min`) — no model call, so the common case costs nothing. The model is only hit
+  for real questions.
+- Turn-taking runs on **gates** derived from the step: `ready` (has a timer — "say go
+  when you're ready" then the clock starts), `cue` (has `watch_for`), `open`. During a
+  timer the mic is deliberately shut and Ember is silent until it rings.
+- `lib/voiceCommands.ts` resolves ~a dozen short phrases on-device (next / back / repeat /
+  go / pause / how long / ingredients / exit) so they're instant and free. Matching is
+  whole-utterance against an exact phrase list and capped at 6 words — "how do I know
+  when it's done" must reach the model, not register as "next".
+- `lib/useVoiceRecorder.ts` extracted from `PushToTalk` (both now share one recording
+  path) and given level-based silence detection, so the mic closes itself after ~1.2s of
+  quiet. Tapping to stop would have defeated the point.
+- `lib/speech.ts` wraps `speechSynthesis`: per-sentence utterances (iOS truncates long
+  ones, and barge-in cancels land faster), an iOS unlock-on-gesture, and a generation
+  counter so a cancelled utterance can't re-open the mic for an abandoned turn.
+- Voice guidance is appended to the mid-conversation step note, **not** `instructions`,
+  so the cached prefix stays byte-identical and toggling voice mid-cook costs no cache.
+
 ## 2026-08-13 15:31
 - Applied `005_fitness_auto_log.sql` to the shared project — `ember.profiles
   .fitness_auto_log` existed only as an unapplied migration file, so the Settings

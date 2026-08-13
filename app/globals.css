@@ -1270,3 +1270,137 @@ a.card:active, button.card:active {
   color: var(--accent-icon);
 }
 .a2hs-glyph svg { width: 14px; height: 14px; }
+
+/* ─── Voice mode (hands-free cook) ────────────────────────────────
+   A second face on the same cook session. Read mode is for reading;
+   this one is for glancing at from across the kitchen with wet hands,
+   so everything is oversized and there is exactly one thing to tap. */
+
+.voice-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  padding: max(18px, env(safe-area-inset-top)) 22px max(24px, env(safe-area-inset-bottom));
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(240, 118, 43, 0.16), transparent 65%),
+    var(--bg);
+  animation: fadeIn 0.25s ease;
+}
+
+.voice-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.voice-timer {
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.voice-timer.live {
+  color: var(--accent-icon);
+  text-shadow: 0 0 18px rgba(240, 118, 43, 0.5);
+}
+.voice-timer-placeholder { min-width: 1px; }
+
+.voice-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  padding: 24px 0;
+}
+
+/* the one line that replaces looking at the phone */
+.voice-instruction {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 7.5vw, 2.9rem);
+  line-height: 1.18;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.voice-watch {
+  margin-top: 18px;
+  color: var(--text-faint);
+  font-size: 0.95rem;
+  text-wrap: balance;
+}
+
+.voice-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.voice-orb {
+  width: 116px;
+  height: 116px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  transition: background 0.2s, box-shadow 0.2s, border-color 0.2s, transform 0.12s;
+}
+.voice-orb:active { transform: scale(0.95); }
+
+.voice-orb-idle { color: var(--text-dim); }
+
+.voice-orb-listening {
+  border-color: var(--green-ok);
+  color: var(--green-ok);
+  background: rgba(127, 176, 105, 0.12);
+  animation: voice-pulse 1.6s ease-in-out infinite;
+}
+
+.voice-orb-speaking {
+  border-color: var(--ember-500);
+  color: var(--accent-icon);
+  background: rgba(240, 118, 43, 0.14);
+  box-shadow: 0 0 40px -6px rgba(240, 118, 43, 0.6);
+}
+
+.voice-orb-thinking {
+  border-color: var(--border-strong);
+  color: var(--text-dim);
+}
+
+@keyframes voice-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(127, 176, 105, 0.4); }
+  50%      { box-shadow: 0 0 0 18px rgba(127, 176, 105, 0); }
+}
+
+.voice-gate {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  text-align: center;
+  min-height: 1.3em;
+  text-wrap: balance;
+}
+
+.voice-heard {
+  color: var(--text-faint);
+  font-size: 0.85rem;
+  font-style: italic;
+  text-align: center;
+  max-width: 92%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-orb-listening { animation: none; }
+  .voice-shell { animation: none; }
+}
