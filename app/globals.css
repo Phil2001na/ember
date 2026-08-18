@@ -1389,6 +1389,13 @@ a.card:active, button.card:active {
   text-wrap: balance;
 }
 
+.voice-disclosure {
+  margin: -2px 0 0;
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  opacity: 0.72;
+}
+
 .voice-heard {
   color: var(--text-faint);
   font-size: 0.85rem;

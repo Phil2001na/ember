@@ -270,6 +270,7 @@ export default function VoiceCook({
         <p className="voice-gate">
           {notice ?? (displayPhase === "idle" ? idleHint : PHASE_HINT[displayPhase])}
         </p>
+        <p className="voice-disclosure">Ember&apos;s voice is AI-generated.</p>
         {heard && <p className="voice-heard">“{heard}”</p>}
       </div>
     </div>

@@ -752,10 +752,14 @@ export default function CookClient({
               onClick={() => {
                 setSpeakReplies((s) => {
                   if (s) cancelSpeech();
+                  else unlockSpeech();
                   return !s;
                 });
               }}
-              aria-label={speakReplies ? "Mute spoken replies" : "Speak replies aloud"}
+              aria-label={
+                speakReplies ? "Mute AI-generated spoken replies" : "Use AI-generated voice"
+              }
+              title="AI-generated voice"
             >
               {speakReplies ? <Volume2 size={19} /> : <VolumeX size={19} />}
             </button>
