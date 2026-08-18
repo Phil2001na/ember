@@ -1,5 +1,10 @@
 # Ember — update log
 
+## 2026-08-18 18:06
+- Replaced browser-only narration with authenticated OpenAI `gpt-4o-mini-tts` speech using the `marin` voice, sentence-ahead generation, and in-memory replay caching.
+- Preserved instant local commands, barge-in cancellation, and the device voice as a network/autoplay fallback; added AI-voice disclosure in hands-free mode, chat controls, and the privacy policy.
+- Added `OPENAI_TTS_VOICE` as an optional server-side override so Ember's voice can be changed without another code edit.
+
 ## 2026-08-13 16:40 — speech-to-text was dead
 - **`/api/transcribe` moved from Groq to OpenAI.** The Groq key returns `401 Invalid
   API Key` (verified against the live endpoint), so every utterance 502'd — voice input

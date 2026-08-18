@@ -66,7 +66,8 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Voice audio</strong> when you use voice input, which is
-            transcribed to text.
+            transcribed to text. Spoken Ember replies use an AI-generated
+            voice, not a human recording.
           </li>
           <li>
             <strong>App activity</strong> such as saved recipes, pantry items,
@@ -79,10 +80,11 @@ export default function PrivacyPage() {
         <h2 style={h2Style}>Where it goes</h2>
         <ul style={{ color: "var(--text-dim)", paddingLeft: 20, display: "flex", flexDirection: "column", gap: 6 }}>
           <li>
-            Chat messages, photos, and voice audio are sent to our AI providers
-            (such as Anthropic or Google) to generate responses, analyze
-            images, and transcribe speech. They process this data to provide
-            the service.
+            Chat messages, photos, voice audio, and text selected for spoken
+            playback are sent to our AI provider, OpenAI, to generate
+            responses, analyze images, transcribe speech, and produce Ember&apos;s
+            AI-generated voice. OpenAI processes this data to provide the
+            service.
           </li>
           <li>
             Your app data (recipes, pantry, chats) is stored in our database,

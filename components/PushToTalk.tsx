@@ -2,6 +2,7 @@
 
 import { Mic, Square } from "lucide-react";
 import { useVoiceRecorder } from "@/lib/useVoiceRecorder";
+import { unlockSpeech } from "@/lib/speech";
 
 export default function PushToTalk({
   onTranscript,
@@ -25,7 +26,13 @@ export default function PushToTalk({
       type="button"
       className={`composer-btn ${recording ? "rec-live" : "composer-btn-ghost"}`}
       disabled={disabled || state === "transcribing"}
-      onClick={() => (recording ? stop() : start())}
+      onClick={() => {
+        if (recording) return stop();
+        // The eventual spoken reply arrives asynchronously, so unlock its
+        // audio element now while this user gesture is still active.
+        unlockSpeech();
+        void start();
+      }}
       style={{
         transition: "background 0.15s, box-shadow 0.15s",
         ...(recording
